@@ -46,6 +46,12 @@ AI_ARCHITECT_DB_TOKEN=
 
 `/Users/nbs22/(Claude)/(claude).projects/business-builder/projects/content-orchestration/`
 
+## 배포
+
+- **Vercel 프로젝트**: junyoung-kims-projects/content-orchestration
+- **GitHub**: https://github.com/migkjy/content-orchestration
+- GitHub main 브랜치 push → Vercel 자동 배포
+
 ## 빌드
 
 ```bash
