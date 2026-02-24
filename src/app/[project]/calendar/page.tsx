@@ -1,7 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects';
-import { getScheduledContent, getNewsletters, type ContentQueueItem, type Newsletter } from '@/lib/content-db';
+import {
+  getScheduledContent,
+  getNewsletters,
+  getPlfSchedule,
+  ensurePlfScheduleTable,
+  type ContentQueueItem,
+  type Newsletter,
+  type PlfScheduleItem,
+} from '@/lib/content-db';
 
 export const revalidate = 60;
 
@@ -51,9 +59,12 @@ export default async function CalendarPage({
   const year = parseInt(sp.year ?? String(now.getFullYear()));
   const month = parseInt(sp.month ?? String(now.getMonth()));
 
-  const [scheduledItems, newsletters] = await Promise.all([
+  await ensurePlfScheduleTable().catch(() => {});
+
+  const [scheduledItems, newsletters, plfItems] = await Promise.all([
     getScheduledContent().catch(() => [] as ContentQueueItem[]),
     getNewsletters().catch(() => [] as Newsletter[]),
+    getPlfSchedule().catch(() => [] as PlfScheduleItem[]),
   ]);
 
   const events: CalendarEvent[] = [];
@@ -246,6 +257,81 @@ export default async function CalendarPage({
           </div>
         )}
       </div>
+
+      {/* PLF Pre-launch Schedule */}
+      {plfItems.length > 0 && (
+        <div className="bg-white rounded-xl border border-orange-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-orange-100 flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">PLF Pre-launch 스케줄</h3>
+              <p className="text-xs text-gray-500 mt-0.5">제품 런칭 전 콘텐츠 배포 계획 — W1 시작일은 CEO 확정 후 적용</p>
+            </div>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium">
+              {plfItems.length}개 등록
+            </span>
+          </div>
+          {(['W1', 'W2', 'W3'] as const).map((week) => {
+            const weekItems = plfItems.filter((i) => i.scheduled_week === week);
+            if (weekItems.length === 0) return null;
+            const weekLabels: Record<string, string> = {
+              W1: '1주차 — Pre-launch: 가치 제공',
+              W2: '2주차 — Pre-launch: 문제 해결',
+              W3: '3주차 — 런칭',
+            };
+            return (
+              <div key={week} className="border-b border-gray-100 last:border-b-0">
+                <div className="px-6 py-2 bg-gray-50">
+                  <span className="text-xs font-semibold text-gray-600">{weekLabels[week]}</span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {weekItems.map((item) => {
+                    const statusConfig: Record<string, { label: string; cls: string }> = {
+                      draft: { label: 'draft', cls: 'bg-gray-100 text-gray-500' },
+                      review: { label: 'review', cls: 'bg-yellow-100 text-yellow-700' },
+                      approved: { label: 'approved', cls: 'bg-green-100 text-green-700' },
+                      published: { label: 'published', cls: 'bg-blue-100 text-blue-700' },
+                    };
+                    const sc = statusConfig[item.status] ?? statusConfig.draft;
+                    const typeColors: Record<string, string> = {
+                      blog: 'bg-emerald-50 text-emerald-700',
+                      email: 'bg-sky-50 text-sky-700',
+                      launch: 'bg-red-50 text-red-700',
+                    };
+                    return (
+                      <div key={item.id} className="px-6 py-3 flex items-center gap-4">
+                        <div className="w-8 text-center">
+                          <div className="text-sm font-bold text-gray-700">{item.scheduled_day}</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{item.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${typeColors[item.content_type] ?? 'bg-gray-100 text-gray-500'}`}>
+                              {item.content_type}
+                            </span>
+                            {item.channel && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-500">
+                                {item.channel}
+                              </span>
+                            )}
+                            {item.slug_or_file && (
+                              <span className="text-xs text-gray-400 truncate max-w-40">
+                                {item.slug_or_file}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc.cls}`}>
+                          {sc.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

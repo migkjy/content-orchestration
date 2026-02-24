@@ -153,3 +153,41 @@ export async function getNewsStats(dbUrl?: string, dbToken?: string): Promise<{ 
     unused: (Number(row.total) || 0) - (Number(row.used) || 0),
   };
 }
+
+export interface PlfScheduleItem {
+  id: string;
+  content_type: string;
+  title: string;
+  slug_or_file: string | null;
+  channel: string | null;
+  scheduled_week: string | null;
+  scheduled_day: string | null;
+  status: string;
+  created_at: number;
+}
+
+export async function ensurePlfScheduleTable(dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  await db.execute(
+    `CREATE TABLE IF NOT EXISTS plf_schedule (
+      id TEXT PRIMARY KEY,
+      content_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      slug_or_file TEXT,
+      channel TEXT,
+      scheduled_week TEXT,
+      scheduled_day TEXT,
+      status TEXT DEFAULT 'draft',
+      created_at INTEGER DEFAULT (unixepoch()*1000)
+    )`
+  ).catch(() => {});
+}
+
+export async function getPlfSchedule(dbUrl?: string, dbToken?: string): Promise<PlfScheduleItem[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM plf_schedule ORDER BY scheduled_week ASC, created_at ASC',
+    args: [],
+  });
+  return result.rows as unknown as PlfScheduleItem[];
+}
