@@ -191,3 +191,187 @@ export async function getPlfSchedule(dbUrl?: string, dbToken?: string): Promise<
   });
   return result.rows as unknown as PlfScheduleItem[];
 }
+
+// --- Analytics aggregate queries ---
+
+export interface DailyPublishStat {
+  day: string;
+  content_type: string;
+  count: number;
+}
+
+export interface PillarStat {
+  pillar: string;
+  status: string;
+  count: number;
+}
+
+export interface PipelineEfficiency {
+  pipeline_name: string;
+  runs: number;
+  success: number;
+  failed: number;
+  avg_duration: number;
+  total_items: number;
+}
+
+export interface ErrorTrend {
+  component: string;
+  error_type: string;
+  count: number;
+  auto_fixed: number;
+}
+
+export interface ChannelPerformance {
+  channel_id: string;
+  name: string;
+  platform: string;
+  status: string;
+  count: number;
+}
+
+export interface WeeklySummary {
+  this_week: { published: number; collected: number; errors: number };
+  last_week: { published: number; collected: number; errors: number };
+}
+
+export async function getDailyPublishStats(days: number = 30): Promise<DailyPublishStat[]> {
+  const db = getContentDb();
+  const cutoff = Date.now() - days * 86400000;
+  const result = await db.execute({
+    sql: `SELECT date(published_at/1000, 'unixepoch') as day, content_type, COUNT(*) as count
+          FROM content_logs WHERE published_at >= ? GROUP BY day, content_type ORDER BY day`,
+    args: [cutoff],
+  });
+  return result.rows.map((r) => ({
+    day: String(r.day),
+    content_type: String(r.content_type),
+    count: Number(r.count),
+  }));
+}
+
+export async function getPillarDistribution(): Promise<PillarStat[]> {
+  const db = getContentDb();
+  const result = await db.execute({
+    sql: `SELECT pillar, status, COUNT(*) as count FROM content_queue
+          WHERE pillar IS NOT NULL GROUP BY pillar, status`,
+    args: [],
+  });
+  return result.rows.map((r) => ({
+    pillar: String(r.pillar),
+    status: String(r.status),
+    count: Number(r.count),
+  }));
+}
+
+export async function getPipelineEfficiency(days: number = 30): Promise<PipelineEfficiency[]> {
+  const db = getContentDb();
+  const cutoff = Date.now() - days * 86400000;
+  const result = await db.execute({
+    sql: `SELECT pipeline_name,
+            COUNT(*) as runs,
+            SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as success,
+            SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) as failed,
+            AVG(duration_ms) as avg_duration,
+            SUM(items_processed) as total_items
+          FROM pipeline_logs WHERE created_at >= ? GROUP BY pipeline_name`,
+    args: [cutoff],
+  });
+  return result.rows.map((r) => ({
+    pipeline_name: String(r.pipeline_name),
+    runs: Number(r.runs),
+    success: Number(r.success),
+    failed: Number(r.failed),
+    avg_duration: Number(r.avg_duration) || 0,
+    total_items: Number(r.total_items) || 0,
+  }));
+}
+
+export async function getErrorTrends(days: number = 30): Promise<ErrorTrend[]> {
+  const db = getContentDb();
+  const cutoff = Date.now() - days * 86400000;
+  try {
+    const result = await db.execute({
+      sql: `SELECT component, error_type, COUNT(*) as count,
+              SUM(CASE WHEN auto_fix_result='success' THEN 1 ELSE 0 END) as auto_fixed
+            FROM error_logs WHERE occurred_at >= ? GROUP BY component, error_type`,
+      args: [cutoff],
+    });
+    return result.rows.map((r) => ({
+      component: String(r.component),
+      error_type: String(r.error_type),
+      count: Number(r.count),
+      auto_fixed: Number(r.auto_fixed),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getChannelPerformance(): Promise<ChannelPerformance[]> {
+  const db = getContentDb();
+  try {
+    const result = await db.execute({
+      sql: `SELECT cd.channel_id, COALESCE(c.name, cd.channel_id) as name,
+              COALESCE(c.platform, 'unknown') as platform,
+              cd.platform_status as status, COUNT(*) as count
+            FROM content_distributions cd LEFT JOIN channels c ON cd.channel_id = c.id
+            GROUP BY cd.channel_id, cd.platform_status`,
+      args: [],
+    });
+    return result.rows.map((r) => ({
+      channel_id: String(r.channel_id),
+      name: String(r.name),
+      platform: String(r.platform),
+      status: String(r.status),
+      count: Number(r.count),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getWeeklySummary(): Promise<WeeklySummary> {
+  const db = getContentDb();
+  const now = Date.now();
+  const oneWeekAgo = now - 7 * 86400000;
+  const twoWeeksAgo = now - 14 * 86400000;
+
+  const empty = { published: 0, collected: 0, errors: 0 };
+
+  try {
+    const [pubThis, pubLast, colThis, colLast] = await Promise.all([
+      db.execute({ sql: 'SELECT COUNT(*) as c FROM content_logs WHERE published_at >= ?', args: [oneWeekAgo] }),
+      db.execute({ sql: 'SELECT COUNT(*) as c FROM content_logs WHERE published_at >= ? AND published_at < ?', args: [twoWeeksAgo, oneWeekAgo] }),
+      db.execute({ sql: 'SELECT COUNT(*) as c FROM collected_news WHERE created_at >= ?', args: [oneWeekAgo] }),
+      db.execute({ sql: 'SELECT COUNT(*) as c FROM collected_news WHERE created_at >= ? AND created_at < ?', args: [twoWeeksAgo, oneWeekAgo] }),
+    ]);
+
+    let errThis = 0, errLast = 0;
+    try {
+      const [eThis, eLast] = await Promise.all([
+        db.execute({ sql: 'SELECT COUNT(*) as c FROM error_logs WHERE occurred_at >= ?', args: [oneWeekAgo] }),
+        db.execute({ sql: 'SELECT COUNT(*) as c FROM error_logs WHERE occurred_at >= ? AND occurred_at < ?', args: [twoWeeksAgo, oneWeekAgo] }),
+      ]);
+      errThis = Number(eThis.rows[0]?.c) || 0;
+      errLast = Number(eLast.rows[0]?.c) || 0;
+    } catch {
+      // error_logs table may not exist yet
+    }
+
+    return {
+      this_week: {
+        published: Number(pubThis.rows[0]?.c) || 0,
+        collected: Number(colThis.rows[0]?.c) || 0,
+        errors: errThis,
+      },
+      last_week: {
+        published: Number(pubLast.rows[0]?.c) || 0,
+        collected: Number(colLast.rows[0]?.c) || 0,
+        errors: errLast,
+      },
+    };
+  } catch {
+    return { this_week: { ...empty }, last_week: { ...empty } };
+  }
+}
