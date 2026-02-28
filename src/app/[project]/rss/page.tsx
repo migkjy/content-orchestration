@@ -17,6 +17,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   official: 'bg-blue-50 text-blue-700',
   community: 'bg-green-50 text-green-700',
   research: 'bg-purple-50 text-purple-700',
+  youtube: 'bg-pink-50 text-pink-700',
 };
 
 const LANG_LABELS: Record<string, string> = {
@@ -56,8 +57,11 @@ export default async function RssPage({ params }: { params: Promise<{ project: s
     };
   });
 
-  const successFeeds = feedsWithStats.filter((f) => f.hasData);
-  const failedFeeds = feedsWithStats.filter((f) => !f.hasData);
+  const rssFeeds = feedsWithStats.filter((f) => f.platform !== 'youtube');
+  const youtubeFeeds = feedsWithStats.filter((f) => f.platform === 'youtube');
+
+  const successFeeds = rssFeeds.filter((f) => f.hasData);
+  const failedFeeds = rssFeeds.filter((f) => !f.hasData);
 
   const knownFailed = ['ZDNet Korea AI', '블로터', 'ITWorld Korea', 'Reddit r/artificial', 'Reddit r/LocalLLaMA', 'Anthropic Blog'];
   const failedKnown = failedFeeds.filter((f) => knownFailed.includes(f.name));
@@ -163,6 +167,67 @@ export default async function RssPage({ params }: { params: Promise<{ project: s
           </div>
         )}
       </section>
+
+      {/* YouTube Feeds */}
+      {youtubeFeeds.length > 0 && (
+        <section>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
+            YouTube 채널 피드
+            <span className="ml-2 text-sm font-normal text-pink-600">({youtubeFeeds.length}개)</span>
+          </h2>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">채널</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">언어</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">등급</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">플랫폼</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">수집량</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">최근 수집</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">상태</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {youtubeFeeds.map((feed, i) => (
+                  <tr key={feed.name} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-gray-800">{feed.name}</div>
+                      <div className="text-xs text-gray-400 truncate max-w-xs">{feed.url}</div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{LANG_LABELS[feed.lang] ?? feed.lang}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold ${GRADE_COLORS[feed.grade] ?? ''}`}>
+                        {feed.grade}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex px-2 py-0.5 rounded text-xs bg-pink-50 text-pink-700">
+                        YouTube
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{feed.total}건</td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{formatRelativeTime(feed.latest_at)}</td>
+                    <td className="px-4 py-3">
+                      {feed.hasData ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />
+                          정상
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                          <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block" />
+                          미수집
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Failed Feeds */}
       {failedFeeds.length > 0 && (
