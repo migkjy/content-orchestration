@@ -11,14 +11,14 @@ export const projects = [
     name: 'Richbukae',
     dbUrl: process.env.RICHBUKAE_DB_URL,
     dbToken: process.env.RICHBUKAE_DB_TOKEN,
-    available: false,
+    available: true,
   },
   {
     id: 'ai-architect',
     name: 'AI Architect Global',
     dbUrl: process.env.AI_ARCHITECT_DB_URL,
     dbToken: process.env.AI_ARCHITECT_DB_TOKEN,
-    available: false,
+    available: true,
   },
 ] as const;
 
