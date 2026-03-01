@@ -36,6 +36,38 @@ export interface ContentQueueItem {
   approved_by: string | null;
   approved_at: number | null;
   rejected_reason: string | null;
+  platform_targets: string | null;
+  publish_results: string | null;
+  metadata: string | null;
+}
+
+export interface PlatformConfig {
+  id: string;
+  name: string;
+  platform_type: string;
+  api_endpoint: string | null;
+  auth_type: string;
+  auth_key_env: string | null;
+  config_json: string;
+  is_active: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface PublishLog {
+  id: string;
+  content_id: string;
+  platform_id: string;
+  status: string;
+  request_payload: string | null;
+  response_status: number | null;
+  response_body: string | null;
+  error_message: string | null;
+  retry_count: number;
+  published_url: string | null;
+  triggered_by: string;
+  created_at: number;
+  completed_at: number | null;
 }
 
 export interface ContentLog {
@@ -449,4 +481,94 @@ export async function updateContentStatus(
   query += ' WHERE id = ?';
   args.push(id);
   await db.execute({ sql: query, args });
+}
+
+export async function getPlatformConfigs(dbUrl?: string, dbToken?: string): Promise<PlatformConfig[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM platform_configs WHERE is_active = 1 ORDER BY name',
+    args: [],
+  });
+  return result.rows as unknown as PlatformConfig[];
+}
+
+export async function getContentById(id: string, dbUrl?: string, dbToken?: string): Promise<ContentQueueItem | null> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM content_queue WHERE id = ? LIMIT 1',
+    args: [id],
+  });
+  return result.rows[0] ? (result.rows[0] as unknown as ContentQueueItem) : null;
+}
+
+export async function createContent(data: {
+  type: string;
+  pillar?: string;
+  topic?: string;
+  title: string;
+  content_body?: string;
+  channel?: string;
+  project?: string;
+  priority?: number;
+}, dbUrl?: string, dbToken?: string): Promise<string> {
+  const db = getContentDb(dbUrl, dbToken);
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db.execute({
+    sql: `INSERT INTO content_queue (id, type, pillar, topic, title, content_body, status, priority, channel, project, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      data.type,
+      data.pillar || null,
+      data.topic || null,
+      data.title,
+      data.content_body || null,
+      data.priority ?? 0,
+      data.channel || null,
+      data.project || null,
+      now,
+      now,
+    ],
+  });
+  return id;
+}
+
+export async function updateContent(id: string, data: {
+  title?: string;
+  content_body?: string;
+  pillar?: string;
+  channel?: string;
+  metadata?: string;
+}, dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  const sets: string[] = ['updated_at = ?'];
+  const args: (string | number | null)[] = [Date.now()];
+
+  if (data.title !== undefined) {
+    sets.push('title = ?');
+    args.push(data.title);
+  }
+  if (data.content_body !== undefined) {
+    sets.push('content_body = ?');
+    args.push(data.content_body);
+  }
+  if (data.pillar !== undefined) {
+    sets.push('pillar = ?');
+    args.push(data.pillar);
+  }
+  if (data.channel !== undefined) {
+    sets.push('channel = ?');
+    args.push(data.channel);
+  }
+  if (data.metadata !== undefined) {
+    sets.push('metadata = ?');
+    args.push(data.metadata);
+  }
+
+  args.push(id);
+  await db.execute({
+    sql: `UPDATE content_queue SET ${sets.join(', ')} WHERE id = ?`,
+    args,
+  });
 }

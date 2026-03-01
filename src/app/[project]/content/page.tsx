@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { getProject } from '@/lib/projects';
 import { getContentQueueFull } from '@/lib/content-db';
 import { approveContent, rejectContent, moveToReview } from '@/app/actions/content';
@@ -59,13 +60,21 @@ export default async function ContentWorkflowPage({
   return (
     <div className="space-y-6">
       {/* header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {project.name} · 콘텐츠 워크플로우
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          draft → 검수 → 승인 → 발행 파이프라인
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {project.name} · 콘텐츠 워크플로우
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            draft → 검수 → 승인 → 발행 파이프라인
+          </p>
+        </div>
+        <Link
+          href={`/${projectId}/content/new`}
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          + 새 콘텐츠
+        </Link>
       </div>
 
       {/* status tabs */}
@@ -136,7 +145,12 @@ export default async function ContentWorkflowPage({
                   )}
                 </div>
                 <h3 className="text-sm font-medium text-gray-900 leading-snug">
-                  {item.title || item.topic || '(제목 없음)'}
+                  <Link
+                    href={`/${projectId}/content/${item.id}`}
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    {item.title || item.topic || '(제목 없음)'}
+                  </Link>
                 </h3>
                 {item.approved_by && (
                   <p className="text-xs text-gray-400 mt-1">승인: {item.approved_by}</p>
