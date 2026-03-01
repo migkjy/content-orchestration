@@ -121,6 +121,19 @@ export default async function ContentDetailPage({
         </div>
       </div>
 
+      {/* Title header block */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+          {item.title || '(제목 없음)'}
+        </h2>
+        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+          <span>{item.type}</span>
+          {item.channel && <span>· {item.channel}</span>}
+          {item.pillar && <span>· {item.pillar}</span>}
+          <span>· {new Date(item.created_at).toLocaleDateString('ko-KR')}</span>
+        </div>
+      </div>
+
       {/* Editable form or read-only view */}
       {isEditable ? (
         <form action={updateContentAction.bind(null, item.id, project)} className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
