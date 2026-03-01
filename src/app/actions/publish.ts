@@ -160,3 +160,39 @@ export async function publishToBlog(contentId: string, projectId: string) {
   revalidatePath(`/${projectId}/content`);
   revalidatePath(`/${projectId}/content/${contentId}`);
 }
+
+export async function publishToGetRates(contentId: string, projectId: string) {
+  const content = await getContentById(contentId);
+  if (!content) throw new Error('Content not found');
+
+  const apiKey = process.env.GETRATES_API_KEY;
+  if (!apiKey) throw new Error('GETRATES_API_KEY not configured — CEO 블로킹 해제 필요');
+
+  await updateContentStatus(contentId, 'publishing');
+
+  const logId = await createPublishLog({
+    content_id: contentId,
+    platform_id: 'getrates',
+    status: 'pending',
+    triggered_by: 'manual',
+  });
+
+  // TODO: GetRates API 문서 확보 후 구현
+  // 예상 엔드포인트: process.env.GETRATES_API_URL
+  // 예상 payload: { title, body, platform: 'twitter'|'instagram'|'linkedin', hashtags[] }
+
+  try {
+    // STUB: API 문서 확보 시 아래를 실제 구현으로 교체
+    throw new Error('GetRates API 문서 미확보 — CEO 블로킹 해제 후 구현 예정');
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await updatePublishLog(logId, {
+      status: 'failed',
+      error_message: msg,
+    });
+    await updateContentStatus(contentId, 'failed');
+  }
+
+  revalidatePath(`/${projectId}/content`);
+  revalidatePath(`/${projectId}/content/${contentId}`);
+}

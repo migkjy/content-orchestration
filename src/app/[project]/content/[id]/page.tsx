@@ -9,7 +9,7 @@ import {
   moveToReview,
   moveToDraft,
 } from '@/app/actions/content';
-import { publishToBrevo, publishToBlog } from '@/app/actions/publish';
+import { publishToBrevo, publishToBlog, publishToGetRates } from '@/app/actions/publish';
 import { ContentEditor } from '@/components/content-editor';
 import { SchedulerForm } from '@/components/scheduler-form';
 
@@ -111,6 +111,13 @@ export default async function ContentDetailPage({
               </button>
             </form>
           )}
+          {item.status === 'approved' && item.channel === 'getrates' && (
+            <form action={publishToGetRates.bind(null, item.id, project)}>
+              <button type="submit" className="px-3 py-1.5 text-xs font-medium text-white bg-purple-600 border border-purple-700 rounded hover:bg-purple-700 transition-colors">
+                SNS 발송 (GetRates)
+              </button>
+            </form>
+          )}
           {(item.status === 'approved' || item.status === 'scheduled') && (
             <SchedulerForm
               contentId={item.id}
@@ -188,6 +195,7 @@ export default async function ContentDetailPage({
                 <option value="linkedin">LinkedIn</option>
                 <option value="twitter">X/트위터</option>
                 <option value="instagram">인스타그램</option>
+                <option value="getrates">GetRates SNS</option>
               </select>
             </div>
           </div>
