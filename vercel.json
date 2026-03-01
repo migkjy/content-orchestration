@@ -1,0 +1,16 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": false,
+      "master": false,
+      "production": true,
+      "staging": true
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/publish",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

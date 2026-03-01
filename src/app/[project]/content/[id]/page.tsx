@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getProject } from '@/lib/projects';
-import { getContentById } from '@/lib/content-db';
+import { getContentById, getPublishLogs } from '@/lib/content-db';
 import {
   updateContentAction,
   approveContent,
@@ -9,6 +9,7 @@ import {
   moveToReview,
   moveToDraft,
 } from '@/app/actions/content';
+import { publishToBrevo } from '@/app/actions/publish';
 import { ContentEditor } from '@/components/content-editor';
 
 export const revalidate = 0;
@@ -35,6 +36,7 @@ export default async function ContentDetailPage({
   const item = await getContentById(id);
   if (!item) notFound();
 
+  const publishLogs = await getPublishLogs(id);
   const isEditable = item.status === 'draft' || item.status === 'review';
   const metadata = item.metadata ? (() => { try { return JSON.parse(item.metadata!); } catch { return {}; } })() : {};
 
@@ -91,6 +93,13 @@ export default async function ContentDetailPage({
             <form action={moveToDraft.bind(null, item.id, project)}>
               <button type="submit" className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors">
                 Draft로 복귀
+              </button>
+            </form>
+          )}
+          {item.status === 'approved' && (
+            <form action={publishToBrevo.bind(null, item.id, project)}>
+              <button type="submit" className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 border border-green-700 rounded hover:bg-green-700 transition-colors">
+                Brevo 발송
               </button>
             </form>
           )}
@@ -264,6 +273,33 @@ export default async function ContentDetailPage({
           <pre className="text-xs text-gray-500 overflow-auto bg-gray-50 rounded p-2">
             {JSON.stringify(JSON.parse(item.publish_results), null, 2)}
           </pre>
+        </div>
+      )}
+
+      {/* Publish logs */}
+      {publishLogs.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+          <h3 className="text-sm font-medium text-gray-700">배포 이력</h3>
+          {publishLogs.map((log) => (
+            <div key={log.id} className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="font-mono text-gray-500">{log.platform_id}</span>
+              <span className={`px-2 py-0.5 rounded font-medium ${
+                log.status === 'success' ? 'bg-green-100 text-green-700' :
+                log.status === 'failed' ? 'bg-red-100 text-red-700' :
+                'bg-yellow-100 text-yellow-700'
+              }`}>{log.status}</span>
+              {log.published_url && (
+                <a href={log.published_url} target="_blank" rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline truncate max-w-xs">
+                  {log.published_url}
+                </a>
+              )}
+              {log.error_message && (
+                <span className="text-red-500 truncate max-w-xs">{log.error_message}</span>
+              )}
+              <span className="text-gray-400">{new Date(log.created_at).toLocaleString('ko-KR')}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>

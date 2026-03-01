@@ -534,6 +534,51 @@ export async function createContent(data: {
   return id;
 }
 
+export async function createPublishLog(data: {
+  content_id: string;
+  platform_id: string;
+  status: string;
+  request_payload?: string;
+  triggered_by?: string;
+}, dbUrl?: string, dbToken?: string): Promise<string> {
+  const db = getContentDb(dbUrl, dbToken);
+  const id = crypto.randomUUID();
+  await db.execute({
+    sql: `INSERT INTO publish_logs (id, content_id, platform_id, status, request_payload, triggered_by, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.content_id, data.platform_id, data.status,
+           data.request_payload || null, data.triggered_by || 'manual', Date.now()],
+  });
+  return id;
+}
+
+export async function updatePublishLog(id: string, data: {
+  status: string;
+  response_status?: number;
+  response_body?: string;
+  error_message?: string;
+  published_url?: string;
+  completed_at?: number;
+}, dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  await db.execute({
+    sql: `UPDATE publish_logs SET status=?, response_status=?, response_body=?,
+          error_message=?, published_url=?, completed_at=? WHERE id=?`,
+    args: [data.status, data.response_status ?? null, data.response_body ?? null,
+           data.error_message ?? null, data.published_url ?? null,
+           data.completed_at ?? Date.now(), id],
+  });
+}
+
+export async function getPublishLogs(contentId: string, dbUrl?: string, dbToken?: string): Promise<PublishLog[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM publish_logs WHERE content_id = ? ORDER BY created_at DESC',
+    args: [contentId],
+  });
+  return result.rows as unknown as PublishLog[];
+}
+
 export async function updateContent(id: string, data: {
   title?: string;
   content_body?: string;
