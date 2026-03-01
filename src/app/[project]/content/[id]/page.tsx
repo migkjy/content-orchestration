@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/content';
 import { publishToBrevo, publishToBlog } from '@/app/actions/publish';
 import { ContentEditor } from '@/components/content-editor';
+import { SchedulerForm } from '@/components/scheduler-form';
 
 export const revalidate = 0;
 
@@ -109,6 +110,13 @@ export default async function ContentDetailPage({
                 블로그 게시
               </button>
             </form>
+          )}
+          {(item.status === 'approved' || item.status === 'scheduled') && (
+            <SchedulerForm
+              contentId={item.id}
+              projectId={project}
+              currentScheduledAt={item.scheduled_at}
+            />
           )}
         </div>
       </div>
@@ -226,7 +234,7 @@ export default async function ContentDetailPage({
               <span>유형: {item.type}</span>
               {item.approved_by && <span>승인: {item.approved_by}</span>}
               {item.scheduled_at && (
-                <span>예약: {new Date(item.scheduled_at).toLocaleString('ko-KR')}</span>
+                <span className="text-purple-600">예약: {new Date(item.scheduled_at).toLocaleString('ko-KR')}</span>
               )}
               <span>생성: {new Date(item.created_at).toLocaleString('ko-KR')}</span>
             </div>

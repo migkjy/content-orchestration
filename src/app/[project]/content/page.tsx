@@ -155,6 +155,11 @@ export default async function ContentWorkflowPage({
                 {item.approved_by && (
                   <p className="text-xs text-gray-400 mt-1">승인: {item.approved_by}</p>
                 )}
+                {item.scheduled_at && (
+                  <p className="text-xs text-purple-500 mt-1">
+                    🕐 {new Date(item.scheduled_at).toLocaleString('ko-KR')} 예약
+                  </p>
+                )}
                 {item.rejected_reason && (
                   <p className="text-xs text-red-500 mt-1">반려: {item.rejected_reason}</p>
                 )}
