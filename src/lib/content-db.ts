@@ -382,11 +382,13 @@ export async function getWeeklySummary(): Promise<WeeklySummary> {
 }
 
 export async function getContentQueueFull(
-  db: ReturnType<typeof getContentDb>,
   project?: string,
   status?: string,
-  channel?: string
+  channel?: string,
+  dbUrl?: string,
+  dbToken?: string
 ): Promise<ContentQueueItem[]> {
+  const db = getContentDb(dbUrl, dbToken);
   let query = `SELECT id, type, pillar, topic, title, content_body, status, priority,
     channel, project, approved_by, approved_at, rejected_reason,
     created_at, updated_at, scheduled_at
@@ -416,15 +418,17 @@ export async function getContentQueueFull(
 }
 
 export async function updateContentStatus(
-  db: ReturnType<typeof getContentDb>,
   id: string,
   status: string,
   options?: {
     approved_by?: string;
     rejected_reason?: string;
     scheduled_at?: number;
-  }
+  },
+  dbUrl?: string,
+  dbToken?: string
 ): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
   const now = Date.now();
   let query = 'UPDATE content_queue SET status = ?, updated_at = ?';
   const args: (string | number | null)[] = [status, now];

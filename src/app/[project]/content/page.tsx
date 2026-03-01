@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@libsql/client/web';
 import { getProject } from '@/lib/projects';
 import { getContentQueueFull } from '@/lib/content-db';
 import { approveContent, rejectContent, moveToReview } from '@/app/actions/content';
@@ -35,15 +34,9 @@ export default async function ContentWorkflowPage({
   const project = getProject(projectId);
   if (!project) notFound();
 
-  const db = createClient({
-    url: process.env.CONTENT_OS_DB_URL!,
-    authToken: process.env.CONTENT_OS_DB_TOKEN!,
-  });
-
   const { status: statusFilter, channel: channelFilter } = await searchParams;
 
   const items = await getContentQueueFull(
-    db,
     projectId,
     statusFilter === 'all' ? undefined : statusFilter,
     channelFilter
@@ -57,7 +50,7 @@ export default async function ContentWorkflowPage({
   }, {} as Record<string, number>);
 
   // status counts (from all items)
-  const allItems = await getContentQueueFull(db, projectId);
+  const allItems = await getContentQueueFull(projectId);
   const statusCounts = allItems.reduce((acc, item) => {
     acc[item.status] = (acc[item.status] || 0) + 1;
     return acc;
