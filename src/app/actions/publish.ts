@@ -74,3 +74,89 @@ export async function publishToBrevo(contentId: string, projectId: string) {
   revalidatePath(`/${projectId}/content`);
   revalidatePath(`/${projectId}/content/${contentId}`);
 }
+
+export async function publishToBlog(contentId: string, projectId: string) {
+  const content = await getContentById(contentId);
+  if (!content) throw new Error('Content not found');
+
+  const apiKey = process.env.APPPRO_BLOG_API_KEY;
+  const apiUrl = process.env.APPPRO_BLOG_API_URL || 'https://apppro.kr/api/blog/publish';
+  if (!apiKey) throw new Error('APPPRO_BLOG_API_KEY not configured');
+
+  await updateContentStatus(contentId, 'publishing');
+
+  const logId = await createPublishLog({
+    content_id: contentId,
+    platform_id: 'blog.apppro.kr',
+    status: 'pending',
+    triggered_by: 'manual',
+  });
+
+  const baseSlug = content.title
+    ? content.title
+        .toLowerCase()
+        .replace(/[가-힣]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 60) || `post-${contentId.slice(0, 8)}`
+    : `post-${contentId.slice(0, 8)}`;
+
+  const metadata = content.metadata
+    ? (() => { try { return JSON.parse(content.metadata!); } catch { return {}; } })()
+    : {};
+
+  const payload = {
+    title: content.title || '(제목 없음)',
+    slug: baseSlug,
+    content: content.content_body || '',
+    category: content.pillar || 'general',
+    tags: metadata.tags || [],
+    seo_title: metadata.seo_title || content.title || '',
+    seo_description: metadata.description || '',
+    author: 'AppPro AI',
+    published: true,
+  };
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await res.json();
+
+    if (res.ok && body.success) {
+      await updatePublishLog(logId, {
+        status: 'success',
+        response_status: res.status,
+        response_body: JSON.stringify(body),
+        published_url: body.url,
+      });
+      await updateContentStatus(contentId, 'published', {});
+    } else {
+      await updatePublishLog(logId, {
+        status: 'failed',
+        response_status: res.status,
+        response_body: JSON.stringify(body),
+        error_message: body.error || 'Blog API error',
+      });
+      await updateContentStatus(contentId, 'failed');
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await updatePublishLog(logId, {
+      status: 'failed',
+      error_message: msg,
+    });
+    await updateContentStatus(contentId, 'failed');
+  }
+
+  revalidatePath(`/${projectId}/content`);
+  revalidatePath(`/${projectId}/content/${contentId}`);
+}
