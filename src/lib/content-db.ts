@@ -594,6 +594,15 @@ export async function getPublishLogs(contentId: string, dbUrl?: string, dbToken?
   return result.rows as unknown as PublishLog[];
 }
 
+export async function getAllPublishLogs(dbUrl?: string, dbToken?: string): Promise<PublishLog[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM publish_logs ORDER BY created_at DESC LIMIT 100',
+    args: [],
+  });
+  return result.rows as unknown as PublishLog[];
+}
+
 export async function updateContent(id: string, data: {
   title?: string;
   content_body?: string;
