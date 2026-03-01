@@ -33,7 +33,7 @@ export default async function ProjectLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
               ← 전체
@@ -41,22 +41,22 @@ export default async function ProjectLayout({
             <span className="text-gray-300">|</span>
             <span className="text-sm font-bold text-gray-800">{projectConfig.name}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <nav className="flex flex-wrap items-center gap-1">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={`/${project}${item.href}`}
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap"
               >
                 <span className="mr-1">{item.icon}</span>
                 {item.label}
               </Link>
             ))}
-          </div>
+          </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
         {children}
       </main>
     </div>

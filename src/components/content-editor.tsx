@@ -28,7 +28,7 @@ export function ContentEditor({
           {showPreview ? '편집만' : '미리보기'}
         </button>
       </div>
-      <div className={`grid gap-4 ${showPreview ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      <div className={`grid gap-4 ${showPreview ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
         {!readOnly && (
           <div>
             <textarea

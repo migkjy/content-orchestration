@@ -60,9 +60,9 @@ export default async function ContentWorkflowPage({
   return (
     <div className="space-y-6">
       {/* header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {project.name} · 콘텐츠 워크플로우
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -71,7 +71,7 @@ export default async function ContentWorkflowPage({
         </div>
         <Link
           href={`/${projectId}/content/new`}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
         >
           + 새 콘텐츠
         </Link>
@@ -127,9 +127,9 @@ export default async function ContentWorkflowPage({
         )}
         {items.map((item) => (
           <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
                   <span className="text-xs text-gray-400 uppercase font-mono">
                     {CHANNEL_LABELS[item.channel || ''] || item.channel || '-'}
                   </span>
@@ -161,7 +161,7 @@ export default async function ContentWorkflowPage({
               </div>
 
               {/* action buttons */}
-              <div className="flex gap-2 shrink-0">
+              <div className="flex flex-wrap gap-2 shrink-0">
                 {item.status === 'draft' && (
                   <form action={moveToReview.bind(null, item.id, projectId)}>
                     <button type="submit"

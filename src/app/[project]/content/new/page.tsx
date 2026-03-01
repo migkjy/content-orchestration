@@ -14,7 +14,7 @@ export default async function NewContentPage({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <Link
           href={`/${project}/content`}
           className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
@@ -41,7 +41,7 @@ export default async function NewContentPage({
         </div>
 
         {/* Type + Pillar + Channel */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
               유형

@@ -41,8 +41,8 @@ export default async function ContentDetailPage({
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/${project}/content`}
             className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
@@ -65,7 +65,7 @@ export default async function ContentDetailPage({
         </div>
 
         {/* Status transition buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {item.status === 'draft' && (
             <form action={moveToReview.bind(null, item.id, project)}>
               <button type="submit" className="px-3 py-1.5 text-xs font-medium text-yellow-700 bg-yellow-50 border border-yellow-200 rounded hover:bg-yellow-100 transition-colors">
@@ -116,7 +116,7 @@ export default async function ContentDetailPage({
           </div>
 
           {/* Type + Pillar + Channel */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">유형</label>
               <span className="text-sm text-gray-500">{item.type}</span>
@@ -162,7 +162,7 @@ export default async function ContentDetailPage({
           />
 
           {/* SEO fields */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="seo_title" className="block text-sm font-medium text-gray-700 mb-1">
                 SEO 제목
@@ -206,7 +206,7 @@ export default async function ContentDetailPage({
         <div className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-2xl font-bold text-gray-900">{item.title || '(제목 없음)'}</h2>
-            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500">
               <span>유형: {item.type}</span>
               {item.approved_by && <span>승인: {item.approved_by}</span>}
               {item.scheduled_at && (
