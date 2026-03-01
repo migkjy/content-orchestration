@@ -150,6 +150,21 @@ export async function getScheduledContent(dbUrl?: string, dbToken?: string): Pro
   return result.rows as unknown as ContentQueueItem[];
 }
 
+export async function getDueScheduledContent(): Promise<ContentQueueItem[]> {
+  const db = getContentDb();
+  const now = Date.now();
+  const result = await db.execute({
+    sql: `SELECT * FROM content_queue
+          WHERE status = 'scheduled'
+          AND scheduled_at IS NOT NULL
+          AND scheduled_at <= ?
+          ORDER BY scheduled_at ASC
+          LIMIT 20`,
+    args: [now],
+  });
+  return result.rows as unknown as ContentQueueItem[];
+}
+
 export async function getContentLogs(dbUrl?: string, dbToken?: string): Promise<ContentLog[]> {
   const db = getContentDb(dbUrl, dbToken);
   const result = await db.execute({
