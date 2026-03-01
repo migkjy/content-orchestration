@@ -432,6 +432,7 @@ export async function getContentQueueFull(
   project?: string,
   status?: string,
   channel?: string,
+  search?: string,
   dbUrl?: string,
   dbToken?: string
 ): Promise<ContentQueueItem[]> {
@@ -454,6 +455,10 @@ export async function getContentQueueFull(
   if (channel) {
     conditions.push('channel = ?');
     args.push(channel);
+  }
+  if (search) {
+    conditions.push('(title LIKE ? OR topic LIKE ?)');
+    args.push(`%${search}%`, `%${search}%`);
   }
   if (conditions.length > 0) {
     query += ' WHERE ' + conditions.join(' AND ');

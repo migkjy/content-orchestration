@@ -39,13 +39,13 @@ export default async function ContentWorkflowPage({
   searchParams,
 }: {
   params: Promise<{ project: string }>;
-  searchParams: Promise<{ status?: string; channel?: string }>;
+  searchParams: Promise<{ status?: string; channel?: string; search?: string }>;
 }) {
   const { project: projectId } = await params;
   const project = getProject(projectId);
   if (!project) notFound();
 
-  const { status: statusFilter, channel: channelFilter } = await searchParams;
+  const { status: statusFilter, channel: channelFilter, search: searchFilter } = await searchParams;
 
   // Get all items for stats (unfiltered)
   const allItems = await getContentQueueFull(projectId);
@@ -54,7 +54,8 @@ export default async function ContentWorkflowPage({
   const items = await getContentQueueFull(
     projectId,
     statusFilter === 'all' ? undefined : statusFilter,
-    channelFilter
+    channelFilter,
+    searchFilter
   );
 
   // Compute stats
@@ -151,6 +152,43 @@ export default async function ContentWorkflowPage({
           );
         })}
       </div>
+
+      {/* Search input */}
+      <form method="get" action={`/${projectId}/content`} className="flex gap-2">
+        {statusFilter && statusFilter !== 'all' && (
+          <input type="hidden" name="status" value={statusFilter} />
+        )}
+        {channelFilter && (
+          <input type="hidden" name="channel" value={channelFilter} />
+        )}
+        <input
+          type="text"
+          name="search"
+          defaultValue={searchFilter || ''}
+          placeholder="제목 검색..."
+          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          검색
+        </button>
+        {searchFilter && (
+          <a
+            href={`/${projectId}/content?status=${statusFilter || 'all'}${channelFilter ? `&channel=${channelFilter}` : ''}`}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            초기화
+          </a>
+        )}
+      </form>
+
+      {searchFilter && (
+        <p className="text-sm text-gray-500">
+          &quot;{searchFilter}&quot; 검색 결과 {items.length}건
+        </p>
+      )}
 
       {/* Status tabs (row 2 - smaller) */}
       <div className="flex gap-2 flex-wrap">
