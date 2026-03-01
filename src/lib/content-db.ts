@@ -22,6 +22,8 @@ export interface ContentQueueItem {
   type: string;
   pillar: string | null;
   topic: string | null;
+  title: string | null;
+  content_body: string | null;
   status: string;
   priority: number;
   result_id: string | null;
@@ -31,6 +33,9 @@ export interface ContentQueueItem {
   scheduled_at: number | null;
   channel: string | null;
   project: string | null;
+  approved_by: string | null;
+  approved_at: number | null;
+  rejected_reason: string | null;
 }
 
 export interface ContentLog {
@@ -374,4 +379,70 @@ export async function getWeeklySummary(): Promise<WeeklySummary> {
   } catch {
     return { this_week: { ...empty }, last_week: { ...empty } };
   }
+}
+
+export async function getContentQueueFull(
+  db: ReturnType<typeof getContentDb>,
+  project?: string,
+  status?: string,
+  channel?: string
+): Promise<ContentQueueItem[]> {
+  let query = `SELECT id, type, pillar, topic, title, content_body, status, priority,
+    channel, project, approved_by, approved_at, rejected_reason,
+    created_at, updated_at, scheduled_at
+    FROM content_queue`;
+  const conditions: string[] = [];
+  const args: string[] = [];
+
+  if (project && project !== 'all') {
+    conditions.push('project = ?');
+    args.push(project);
+  }
+  if (status) {
+    conditions.push('status = ?');
+    args.push(status);
+  }
+  if (channel) {
+    conditions.push('channel = ?');
+    args.push(channel);
+  }
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ');
+  }
+  query += ' ORDER BY created_at DESC LIMIT 100';
+
+  const result = await db.execute({ sql: query, args });
+  return result.rows as unknown as ContentQueueItem[];
+}
+
+export async function updateContentStatus(
+  db: ReturnType<typeof getContentDb>,
+  id: string,
+  status: string,
+  options?: {
+    approved_by?: string;
+    rejected_reason?: string;
+    scheduled_at?: number;
+  }
+): Promise<void> {
+  const now = Date.now();
+  let query = 'UPDATE content_queue SET status = ?, updated_at = ?';
+  const args: (string | number | null)[] = [status, now];
+
+  if (status === 'approved' && options?.approved_by) {
+    query += ', approved_by = ?, approved_at = ?';
+    args.push(options.approved_by, now);
+  }
+  if (status === 'rejected' && options?.rejected_reason) {
+    query += ', rejected_reason = ?';
+    args.push(options.rejected_reason);
+  }
+  if (status === 'scheduled' && options?.scheduled_at) {
+    query += ', scheduled_at = ?';
+    args.push(options.scheduled_at);
+  }
+
+  query += ' WHERE id = ?';
+  args.push(id);
+  await db.execute({ sql: query, args });
 }
