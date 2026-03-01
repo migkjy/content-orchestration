@@ -54,6 +54,30 @@ export async function createContent(projectId: string, formData: FormData) {
   redirect(`/${projectId}/content/${id}`);
 }
 
+export async function bulkUpdateStatus(
+  ids: string[],
+  newStatus: string,
+  projectId: string
+): Promise<{ success: number; failed: number }> {
+  let success = 0;
+  let failed = 0;
+
+  for (const id of ids) {
+    try {
+      const options: Record<string, string> = {};
+      if (newStatus === 'approved') options.approved_by = 'VP/CEO';
+      if (newStatus === 'rejected') options.rejected_reason = '일괄 검토 후 반려';
+      await updateContentStatus(id, newStatus, options);
+      success++;
+    } catch {
+      failed++;
+    }
+  }
+
+  revalidatePath(`/${projectId}/content`);
+  return { success, failed };
+}
+
 export async function updateContentAction(id: string, projectId: string, formData: FormData) {
   const title = formData.get('title') as string;
   const content_body = formData.get('content_body') as string;
