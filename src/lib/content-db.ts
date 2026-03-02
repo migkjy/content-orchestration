@@ -39,6 +39,30 @@ export interface ContentQueueItem {
   platform_targets: string | null;
   publish_results: string | null;
   metadata: string | null;
+  campaign_id: string | null;
+  channel_id: string | null;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string | null;
+  goal: string | null;
+  status: string; // active | paused | completed | archived
+  created_at: number;
+  updated_at: number;
+}
+
+export interface Channel {
+  id: string;
+  name: string;
+  platform: string; // instagram | youtube | newsletter | blog | facebook | x
+  account_name: string | null;
+  connection_type: string | null; // getlate | brevo | wordpress | manual
+  connection_status: string; // connected | disconnected | error
+  connection_detail: string | null;
+  created_at: number;
+  updated_at: number;
 }
 
 export interface PlatformConfig {
@@ -101,9 +125,41 @@ export interface NewsSource {
 
 export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<void> {
   const db = getContentDb(dbUrl, dbToken);
+  // 기존 컬럼 추가 (하위호환)
   await db.execute(`ALTER TABLE content_queue ADD COLUMN scheduled_at INTEGER`).catch(() => {});
   await db.execute(`ALTER TABLE content_queue ADD COLUMN channel TEXT`).catch(() => {});
   await db.execute(`ALTER TABLE content_queue ADD COLUMN project TEXT`).catch(() => {});
+  // 신규: campaign_id, channel_id
+  await db.execute(`ALTER TABLE content_queue ADD COLUMN campaign_id TEXT`).catch(() => {});
+  await db.execute(`ALTER TABLE content_queue ADD COLUMN channel_id TEXT`).catch(() => {});
+
+  // campaigns 테이블
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS campaigns (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      goal TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  `).catch(() => {});
+
+  // channels 테이블
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS channels (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      account_name TEXT,
+      connection_type TEXT,
+      connection_status TEXT NOT NULL DEFAULT 'disconnected',
+      connection_detail TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  `).catch(() => {});
 }
 
 export async function getNewsletters(dbUrl?: string, dbToken?: string): Promise<Newsletter[]> {
@@ -645,4 +701,155 @@ export async function updateContent(id: string, data: {
     sql: `UPDATE content_queue SET ${sets.join(', ')} WHERE id = ?`,
     args,
   });
+}
+
+// === CAMPAIGNS ===
+
+export async function getCampaigns(dbUrl?: string, dbToken?: string): Promise<Campaign[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM campaigns ORDER BY created_at DESC',
+    args: [],
+  });
+  return result.rows as unknown as Campaign[];
+}
+
+export async function getCampaignById(id: string, dbUrl?: string, dbToken?: string): Promise<Campaign | null> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({ sql: 'SELECT * FROM campaigns WHERE id = ? LIMIT 1', args: [id] });
+  return result.rows[0] ? (result.rows[0] as unknown as Campaign) : null;
+}
+
+export async function createCampaign(data: {
+  name: string;
+  description?: string;
+  goal?: string;
+}, dbUrl?: string, dbToken?: string): Promise<string> {
+  const db = getContentDb(dbUrl, dbToken);
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db.execute({
+    sql: `INSERT INTO campaigns (id, name, description, goal, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'active', ?, ?)`,
+    args: [id, data.name, data.description ?? null, data.goal ?? null, now, now],
+  });
+  return id;
+}
+
+export async function updateCampaign(id: string, data: {
+  name?: string;
+  description?: string;
+  goal?: string;
+  status?: string;
+}, dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  const now = Date.now();
+  await db.execute({
+    sql: `UPDATE campaigns SET name = COALESCE(?, name), description = COALESCE(?, description), goal = COALESCE(?, goal), status = COALESCE(?, status), updated_at = ? WHERE id = ?`,
+    args: [data.name ?? null, data.description ?? null, data.goal ?? null, data.status ?? null, now, id],
+  });
+}
+
+// === CHANNELS ===
+
+export async function getChannels(dbUrl?: string, dbToken?: string): Promise<Channel[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: 'SELECT * FROM channels ORDER BY platform, account_name',
+    args: [],
+  });
+  return result.rows as unknown as Channel[];
+}
+
+export async function getChannelById(id: string, dbUrl?: string, dbToken?: string): Promise<Channel | null> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({ sql: 'SELECT * FROM channels WHERE id = ? LIMIT 1', args: [id] });
+  return result.rows[0] ? (result.rows[0] as unknown as Channel) : null;
+}
+
+export async function createChannel(data: {
+  name: string;
+  platform: string;
+  account_name?: string;
+  connection_type?: string;
+  connection_status?: string;
+  connection_detail?: string;
+}, dbUrl?: string, dbToken?: string): Promise<string> {
+  const db = getContentDb(dbUrl, dbToken);
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db.execute({
+    sql: `INSERT INTO channels (id, name, platform, account_name, connection_type, connection_status, connection_detail, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.name, data.platform, data.account_name ?? null, data.connection_type ?? null, data.connection_status ?? 'disconnected', data.connection_detail ?? null, now, now],
+  });
+  return id;
+}
+
+export async function updateChannel(id: string, data: Partial<Omit<Channel, 'id' | 'created_at' | 'updated_at'>>, dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  const now = Date.now();
+  await db.execute({
+    sql: `UPDATE channels SET name = COALESCE(?, name), platform = COALESCE(?, platform), account_name = COALESCE(?, account_name), connection_type = COALESCE(?, connection_type), connection_status = COALESCE(?, connection_status), connection_detail = COALESCE(?, connection_detail), updated_at = ? WHERE id = ?`,
+    args: [data.name ?? null, data.platform ?? null, data.account_name ?? null, data.connection_type ?? null, data.connection_status ?? null, data.connection_detail ?? null, now, id],
+  });
+}
+
+// === CAMPAIGN CONTENT STATS ===
+
+export async function getCampaignContentStats(campaignId: string, dbUrl?: string, dbToken?: string): Promise<{
+  draft: number; review: number; approved: number; scheduled: number; published: number; unwritten: number; cancelled: number; total: number;
+}> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: `SELECT status, COUNT(*) as count FROM content_queue WHERE campaign_id = ? GROUP BY status`,
+    args: [campaignId],
+  });
+  const counts: Record<string, number> = {};
+  for (const row of result.rows) {
+    counts[row.status as string] = Number(row.count);
+  }
+  return {
+    draft: counts['draft'] ?? 0,
+    review: counts['review'] ?? 0,
+    approved: counts['approved'] ?? 0,
+    scheduled: counts['scheduled'] ?? 0,
+    published: counts['published'] ?? 0,
+    unwritten: counts['unwritten'] ?? 0,
+    cancelled: counts['cancelled'] ?? 0,
+    total: Object.values(counts).reduce((a, b) => a + b, 0),
+  };
+}
+
+// 캠페인의 콘텐츠 목록 (채널별 그룹핑용)
+export async function getCampaignContents(campaignId: string, dbUrl?: string, dbToken?: string) {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: `SELECT * FROM content_queue WHERE campaign_id = ? ORDER BY channel_id, scheduled_at, created_at`,
+    args: [campaignId],
+  });
+  return result.rows as unknown as ContentQueueItem[];
+}
+
+// 채널의 콘텐츠 목록 (프로젝트별 그룹핑용)
+export async function getChannelContents(channelId: string, dbUrl?: string, dbToken?: string) {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: `SELECT * FROM content_queue WHERE channel_id = ? ORDER BY campaign_id, scheduled_at, created_at`,
+    args: [channelId],
+  });
+  return result.rows as unknown as ContentQueueItem[];
+}
+
+// 캘린더용: 기간 내 예약/발행 콘텐츠
+export async function getCalendarContents(startTs: number, endTs: number, dbUrl?: string, dbToken?: string) {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: `SELECT cq.*, c.name as campaign_name, ch.platform as channel_platform, ch.account_name
+          FROM content_queue cq
+          LEFT JOIN campaigns c ON cq.campaign_id = c.id
+          LEFT JOIN channels ch ON cq.channel_id = ch.id
+          WHERE cq.scheduled_at BETWEEN ? AND ?
+          ORDER BY cq.scheduled_at`,
+    args: [startTs, endTs],
+  });
+  return result.rows;
 }
