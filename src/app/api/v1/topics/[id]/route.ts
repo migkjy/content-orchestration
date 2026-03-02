@@ -53,6 +53,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (auth) return auth;
 
   const { id } = await params;
+  await ensureSchema().catch(() => {});
+
   const topic = await getTopicById(id);
   if (!topic) return apiError('Topic not found', 404);
 
