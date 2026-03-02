@@ -1059,6 +1059,17 @@ export async function deleteTopic(id: string, dbUrl?: string, dbToken?: string):
   await db.execute({ sql: 'DELETE FROM topic_queue WHERE id = ?', args: [id] });
 }
 
+export async function resetStuckGeneratingTopics(maxAgeMs = 5 * 60 * 1000, dbUrl?: string, dbToken?: string): Promise<number> {
+  const db = getContentDb(dbUrl, dbToken);
+  const cutoff = Date.now() - maxAgeMs;
+  const result = await db.execute({
+    sql: `UPDATE topic_queue SET status = 'approved', updated_at = ?
+          WHERE status = 'generating' AND updated_at < ?`,
+    args: [Date.now(), cutoff],
+  });
+  return Number(result.rowsAffected) || 0;
+}
+
 export async function getApprovedTopics(limit = 3, dbUrl?: string, dbToken?: string): Promise<TopicQueueItem[]> {
   const db = getContentDb(dbUrl, dbToken);
   const result = await db.execute({

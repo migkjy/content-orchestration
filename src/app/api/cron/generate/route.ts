@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApprovedTopics, updateTopic, createContent, ensureSchema } from '@/lib/content-db';
+import { getApprovedTopics, updateTopic, createContent, ensureSchema, resetStuckGeneratingTopics } from '@/lib/content-db';
 import { generateContent } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +16,9 @@ export async function GET(req: NextRequest) {
   }
 
   await ensureSchema().catch(() => {});
+
+  // 5분 이상 generating 상태인 topic을 approved로 복귀
+  await resetStuckGeneratingTopics().catch(() => {});
 
   const topics = await getApprovedTopics(MAX_PER_RUN);
 
