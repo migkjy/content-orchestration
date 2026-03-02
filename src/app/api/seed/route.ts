@@ -97,7 +97,7 @@ export async function POST() {
     { channel_id: ytId, title: 'AI 설계자 완전 입문 가이드 (40분)', status: 'published', scheduled_at: NOW - 1 * DAY,
       content_body: '# AI 설계자 완전 입문 가이드\n\n## 목차\n1. AI 설계자란?\n2. 필요 스킬셋\n3. 수익 구조\n4. 실전 데모\n\n영상 설명: 이 영상에서는 AI 설계자가 되기 위한 모든 것을 40분 만에 알려드립니다.' },
     { channel_id: ytId, title: 'Claude AI로 업무 자동화 실전 (30분)', status: 'draft', scheduled_at: NOW + 5 * DAY,
-      content_body: null },
+      content_body: '# Claude AI로 업무 자동화 실전\n\n## 영상 스크립트 초안\n\n이 영상에서는 Claude AI를 활용한 실전 업무 자동화 방법을 30분 안에 배웁니다.\n\n## 목차\n1. Claude AI 기본 설정 (5분)\n2. 반복 업무 자동화 실전 (10분)\n3. 보고서 자동 생성 (8분)\n4. 이메일 답변 자동화 (5분)\n5. Q&A (2분)\n\n## 핵심 포인트\n- 코딩 없이 자동화 가능\n- 하루 2~3시간 절약\n- 실제 수익 사례 공개\n\n## 촬영 체크리스트\n- [ ] 화면 녹화 설정\n- [ ] 예제 파일 준비\n- [ ] 자막 작성' },
     { channel_id: ytId, title: 'AI 설계자 수강 신청 안내 라이브', status: 'unwritten', scheduled_at: NOW + 14 * DAY,
       content_body: null },
     { channel_id: ytId, title: 'AI 설계자 수강생 성과 인터뷰', status: 'unwritten', scheduled_at: NOW + 21 * DAY,
@@ -109,7 +109,7 @@ export async function POST() {
     { channel_id: nlId, title: '[Week 2] AI 설계자 실전 사례 공개', status: 'scheduled', scheduled_at: NOW + 6 * DAY,
       content_body: '<h1>실전 사례 3가지 공개</h1><p>이번 주에는 실제 AI 설계자로 활동 중인 수강생들의 사례를 공개합니다.</p>' },
     { channel_id: nlId, title: '[Week 3] 수강 신청 오픈 안내', status: 'draft', scheduled_at: NOW + 13 * DAY,
-      content_body: null },
+      content_body: '<h1>AI 설계자 과정 수강 신청이 오픈됩니다</h1>\n<p>안녕하세요, 리치부캐입니다.</p>\n<p>드디어 AI 설계자 과정 <strong>3기 수강 신청</strong>이 오픈됩니다!</p>\n<h2>수강 혜택</h2>\n<ul>\n<li>✅ 8주 심화 커리큘럼</li>\n<li>✅ 1:1 멘토링 2회</li>\n<li>✅ 수강생 전용 Discord 커뮤니티</li>\n<li>✅ 평생 강의 업데이트</li>\n</ul>\n<h2>모집 인원</h2>\n<p>선착순 <strong>10명</strong> 한정</p>\n<h2>수강료</h2>\n<p>정가 <del>99만원</del> → 조기 신청 <strong>69만원</strong></p>' },
     { channel_id: nlId, title: '[Week 4] 마감 임박 + 마지막 혜택', status: 'unwritten', scheduled_at: NOW + 20 * DAY,
       content_body: null },
 
