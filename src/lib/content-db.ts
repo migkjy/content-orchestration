@@ -48,6 +48,9 @@ export interface Campaign {
   name: string;
   description: string | null;
   goal: string | null;
+  type: string; // campaign | ongoing
+  start_date: number | null;
+  end_date: number | null;
   status: string; // active | paused | completed | archived
   created_at: number;
   updated_at: number;
@@ -145,6 +148,9 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
       updated_at INTEGER NOT NULL
     )
   `).catch(() => {});
+  await db.execute(`ALTER TABLE campaigns ADD COLUMN type TEXT DEFAULT 'campaign'`).catch(() => {});
+  await db.execute(`ALTER TABLE campaigns ADD COLUMN start_date INTEGER`).catch(() => {});
+  await db.execute(`ALTER TABLE campaigns ADD COLUMN end_date INTEGER`).catch(() => {});
 
   // channels 테이블
   await db.execute(`
@@ -724,13 +730,18 @@ export async function createCampaign(data: {
   name: string;
   description?: string;
   goal?: string;
+  type?: string;
+  start_date?: number;
+  end_date?: number;
 }, dbUrl?: string, dbToken?: string): Promise<string> {
   const db = getContentDb(dbUrl, dbToken);
   const id = crypto.randomUUID();
   const now = Date.now();
   await db.execute({
-    sql: `INSERT INTO campaigns (id, name, description, goal, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'active', ?, ?)`,
-    args: [id, data.name, data.description ?? null, data.goal ?? null, now, now],
+    sql: `INSERT INTO campaigns (id, name, description, goal, type, start_date, end_date, status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+    args: [id, data.name, data.description ?? null, data.goal ?? null,
+           data.type ?? 'campaign', data.start_date ?? null, data.end_date ?? null, now, now],
   });
   return id;
 }
@@ -739,14 +750,26 @@ export async function updateCampaign(id: string, data: {
   name?: string;
   description?: string;
   goal?: string;
+  type?: string;
+  start_date?: number | null;
+  end_date?: number | null;
   status?: string;
 }, dbUrl?: string, dbToken?: string): Promise<void> {
   const db = getContentDb(dbUrl, dbToken);
   const now = Date.now();
-  await db.execute({
-    sql: `UPDATE campaigns SET name = COALESCE(?, name), description = COALESCE(?, description), goal = COALESCE(?, goal), status = COALESCE(?, status), updated_at = ? WHERE id = ?`,
-    args: [data.name ?? null, data.description ?? null, data.goal ?? null, data.status ?? null, now, id],
-  });
+  const sets: string[] = ['updated_at = ?'];
+  const args: (string | number | null)[] = [now];
+
+  if (data.name !== undefined) { sets.push('name = ?'); args.push(data.name); }
+  if (data.description !== undefined) { sets.push('description = ?'); args.push(data.description); }
+  if (data.goal !== undefined) { sets.push('goal = ?'); args.push(data.goal); }
+  if (data.type !== undefined) { sets.push('type = ?'); args.push(data.type); }
+  if (data.start_date !== undefined) { sets.push('start_date = ?'); args.push(data.start_date); }
+  if (data.end_date !== undefined) { sets.push('end_date = ?'); args.push(data.end_date); }
+  if (data.status !== undefined) { sets.push('status = ?'); args.push(data.status); }
+
+  args.push(id);
+  await db.execute({ sql: `UPDATE campaigns SET ${sets.join(', ')} WHERE id = ?`, args });
 }
 
 // === CHANNELS ===
