@@ -3,9 +3,7 @@ import { notFound } from 'next/navigation';
 import { getProject } from '@/lib/projects';
 import {
   getContentQueueFull,
-  getAllPublishLogs,
   type ContentQueueItem,
-  type PublishLog,
 } from '@/lib/content-db';
 
 export const revalidate = 60;
@@ -62,10 +60,7 @@ export default async function ProjectDashboardPage({
     );
   }
 
-  const [allContent, publishLogs] = await Promise.all([
-    getContentQueueFull(projectId).catch(() => [] as ContentQueueItem[]),
-    getAllPublishLogs().catch(() => [] as PublishLog[]),
-  ]);
+  const allContent = await getContentQueueFull(projectId).catch(() => [] as ContentQueueItem[]);
 
   const stats = {
     draft: allContent.filter((i) => i.status === 'draft').length,
@@ -75,21 +70,6 @@ export default async function ProjectDashboardPage({
     published: allContent.filter((i) => i.status === 'published').length,
     total: allContent.length,
   };
-
-  // Channel publish stats from publish_logs
-  const channelStats = publishLogs.reduce(
-    (acc, log) => {
-      const ch = log.platform_id || 'unknown';
-      if (!acc[ch]) acc[ch] = { success: 0, failed: 0 };
-      if (log.status === 'success' || log.status === 'published') {
-        acc[ch].success++;
-      } else if (log.status === 'failed') {
-        acc[ch].failed++;
-      }
-      return acc;
-    },
-    {} as Record<string, { success: number; failed: number }>
-  );
 
   // Recently published content
   const recentPublished = allContent
@@ -130,36 +110,6 @@ export default async function ProjectDashboardPage({
           </Link>
         ))}
       </div>
-
-      {/* Channel Publish Stats */}
-      <section>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">채널별 발행 현황</h2>
-        {Object.keys(channelStats).length === 0 ? (
-          <EmptyState message="발행 기록이 없습니다." />
-        ) : (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <div className="space-y-3">
-              {Object.entries(channelStats).map(([channel, counts]) => (
-                <div key={channel} className="flex items-center gap-4">
-                  <span className="text-sm text-gray-700 w-40 shrink-0 font-medium">
-                    {channel}
-                  </span>
-                  <div className="flex-1 flex items-center gap-3">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                      성공 {counts.success}건
-                    </span>
-                    {counts.failed > 0 && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                        실패 {counts.failed}건
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
 
       {/* Recent Published Content */}
       <section>

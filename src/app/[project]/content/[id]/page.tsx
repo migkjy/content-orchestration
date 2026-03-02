@@ -261,15 +261,17 @@ export default async function ContentDetailPage({
             </div>
           </div>
 
-          {item.content_body && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            {item.content_body ? (
               <ContentEditor
                 initialContent={item.content_body}
                 name="content_body_readonly"
                 readOnly
               />
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-gray-400 py-4 text-center">콘텐츠 본문이 없습니다.</p>
+            )}
+          </div>
 
           {/* Metadata display */}
           {(metadata.seo_title || metadata.description) && (
