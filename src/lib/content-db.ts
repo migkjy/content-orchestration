@@ -153,6 +153,8 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
   await db.execute(`ALTER TABLE campaigns ADD COLUMN end_date INTEGER`).catch(() => {});
 
   // channels 테이블 — 구 스키마 호환: account_name 등 누락 컬럼 추가
+  // 주의: 구 스키마의 type NOT NULL DEFAULT 없음 → createChannel INSERT 실패 방지
+  // → DB 마이그레이션으로 channels_new에 DEFAULT 'sns' 적용 완료 (2026-03-02)
   await db.execute(`ALTER TABLE channels ADD COLUMN account_name TEXT`).catch(() => {});
   await db.execute(`ALTER TABLE channels ADD COLUMN connection_type TEXT`).catch(() => {});
   await db.execute(`ALTER TABLE channels ADD COLUMN connection_status TEXT DEFAULT 'disconnected'`).catch(() => {});
