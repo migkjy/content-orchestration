@@ -63,12 +63,13 @@ export async function GET(req: NextRequest) {
       await updateTopic(topic.id, {
         status: 'done',
         generated_content_id: contentId,
+        retry_count: 0,
       });
 
       results.push({
         topic_id: topic.id,
         title: topic.title,
-        status: 'success',
+        status: 'done',
         content_id: contentId,
         cost_krw: result.cost_krw,
       });
