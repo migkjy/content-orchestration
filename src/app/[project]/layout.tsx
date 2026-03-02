@@ -13,9 +13,6 @@ const NAV_ITEMS = [
   { href: '', label: '개요', icon: '◈' },
   { href: '/content', label: '콘텐츠', icon: '✎' },
   { href: '/calendar', label: '캘린더', icon: '◷' },
-  { href: '/rss', label: 'RSS 수집', icon: '◉' },
-  { href: '/logs', label: '실행 로그', icon: '≡' },
-  { href: '/analytics', label: '성과 분석', icon: '◆' },
 ];
 
 export default async function ProjectLayout({
