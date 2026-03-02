@@ -278,10 +278,21 @@ export default function ContentDetailPage() {
               className="w-full text-sm text-gray-800 font-mono border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
               placeholder="콘텐츠 본문을 입력하세요 (Markdown 지원)..."
             />
+          ) : item.content_body ? (
+            item.content_body.trim().startsWith('<') ? (
+              // HTML 콘텐츠 렌더링 (뉴스레터 등)
+              <div
+                className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: item.content_body }}
+              />
+            ) : (
+              // 마크다운/일반 텍스트
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed font-sans">
+                {item.content_body}
+              </pre>
+            )
           ) : (
-            <pre className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed font-sans">
-              {item.content_body || <span className="text-gray-400 italic">본문이 없습니다.</span>}
-            </pre>
+            <p className="text-sm text-gray-400 italic text-center py-4">본문이 없습니다.</p>
           )}
         </div>
 
