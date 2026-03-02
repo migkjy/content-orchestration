@@ -8,8 +8,12 @@ export async function GET(request: Request) {
   if (auth) return auth;
 
   await ensureSchema().catch(() => {});
-  const channels = await getChannels();
-  return apiOk(channels);
+  try {
+    const channels = await getChannels();
+    return apiOk(channels);
+  } catch (e) {
+    return apiError(`DB Error: ${e instanceof Error ? e.message : String(e)}`, 500);
+  }
 }
 
 export async function POST(request: Request) {
