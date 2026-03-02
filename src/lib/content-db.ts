@@ -120,6 +120,24 @@ export interface PipelineLog {
   created_at: number;
 }
 
+export interface TopicQueueItem {
+  id: string;
+  pillar: string;                    // ai_automation | mvp_dev | gov_support | maintenance | general
+  title: string;
+  description: string | null;
+  content_type: string;              // blog | newsletter | social | youtube
+  status: string;                    // pending | approved | generating | done | rejected
+  priority: number;
+  source: string | null;             // manual | rss | idea
+  tags: string | null;               // JSON array string e.g. '["AI","자동화"]'
+  prompt_hint: string | null;        // LLM에 전달할 추가 지시사항
+  generated_content_id: string | null; // 생성 완료 시 content_queue.id FK
+  retry_count: number;
+  error_message: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface NewsSource {
   source: string;
   total: number;
@@ -183,6 +201,27 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
       author TEXT NOT NULL DEFAULT '자비스',
       body TEXT NOT NULL,
       created_at INTEGER NOT NULL
+    )
+  `).catch(() => {});
+
+  // topic_queue 테이블
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS topic_queue (
+      id TEXT PRIMARY KEY,
+      pillar TEXT NOT NULL DEFAULT 'general',
+      title TEXT NOT NULL,
+      description TEXT,
+      content_type TEXT NOT NULL DEFAULT 'blog',
+      status TEXT NOT NULL DEFAULT 'pending',
+      priority INTEGER NOT NULL DEFAULT 0,
+      source TEXT,
+      tags TEXT,
+      prompt_hint TEXT,
+      generated_content_id TEXT,
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      error_message TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
     )
   `).catch(() => {});
 }
@@ -926,4 +965,108 @@ export async function addComment(contentId: string, body: string, author: string
     args: [id, contentId, author, body, now],
   });
   return { id, content_id: contentId, author, body, created_at: now };
+}
+
+// === TOPIC QUEUE ===
+
+export async function getTopics(
+  filter?: { pillar?: string; status?: string; content_type?: string },
+  dbUrl?: string,
+  dbToken?: string
+): Promise<TopicQueueItem[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const conditions: string[] = [];
+  const args: string[] = [];
+
+  if (filter?.pillar) { conditions.push('pillar = ?'); args.push(filter.pillar); }
+  if (filter?.status) { conditions.push('status = ?'); args.push(filter.status); }
+  if (filter?.content_type) { conditions.push('content_type = ?'); args.push(filter.content_type); }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const result = await db.execute({
+    sql: `SELECT * FROM topic_queue ${where} ORDER BY priority DESC, created_at DESC LIMIT 100`,
+    args,
+  });
+  return result.rows as unknown as TopicQueueItem[];
+}
+
+export async function getTopicById(id: string, dbUrl?: string, dbToken?: string): Promise<TopicQueueItem | null> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({ sql: 'SELECT * FROM topic_queue WHERE id = ? LIMIT 1', args: [id] });
+  return result.rows[0] ? (result.rows[0] as unknown as TopicQueueItem) : null;
+}
+
+export async function createTopic(data: {
+  pillar: string;
+  title: string;
+  description?: string;
+  content_type: string;
+  priority?: number;
+  source?: string;
+  tags?: string;
+  prompt_hint?: string;
+}, dbUrl?: string, dbToken?: string): Promise<string> {
+  const db = getContentDb(dbUrl, dbToken);
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db.execute({
+    sql: `INSERT INTO topic_queue
+          (id, pillar, title, description, content_type, status, priority, source, tags, prompt_hint,
+           retry_count, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, 0, ?, ?)`,
+    args: [id, data.pillar, data.title, data.description ?? null, data.content_type,
+           data.priority ?? 0, data.source ?? 'manual', data.tags ?? null,
+           data.prompt_hint ?? null, now, now],
+  });
+  return id;
+}
+
+export async function updateTopic(id: string, data: {
+  title?: string;
+  description?: string;
+  pillar?: string;
+  content_type?: string;
+  status?: string;
+  priority?: number;
+  tags?: string;
+  prompt_hint?: string;
+  generated_content_id?: string;
+  retry_count?: number;
+  error_message?: string | null;
+}, dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  const sets: string[] = ['updated_at = ?'];
+  const args: (string | number | null)[] = [Date.now()];
+
+  if (data.title !== undefined) { sets.push('title = ?'); args.push(data.title); }
+  if (data.description !== undefined) { sets.push('description = ?'); args.push(data.description); }
+  if (data.pillar !== undefined) { sets.push('pillar = ?'); args.push(data.pillar); }
+  if (data.content_type !== undefined) { sets.push('content_type = ?'); args.push(data.content_type); }
+  if (data.status !== undefined) { sets.push('status = ?'); args.push(data.status); }
+  if (data.priority !== undefined) { sets.push('priority = ?'); args.push(data.priority); }
+  if (data.tags !== undefined) { sets.push('tags = ?'); args.push(data.tags); }
+  if (data.prompt_hint !== undefined) { sets.push('prompt_hint = ?'); args.push(data.prompt_hint); }
+  if (data.generated_content_id !== undefined) { sets.push('generated_content_id = ?'); args.push(data.generated_content_id); }
+  if (data.retry_count !== undefined) { sets.push('retry_count = ?'); args.push(data.retry_count); }
+  if ('error_message' in data) { sets.push('error_message = ?'); args.push(data.error_message ?? null); }
+
+  args.push(id);
+  await db.execute({ sql: `UPDATE topic_queue SET ${sets.join(', ')} WHERE id = ?`, args });
+}
+
+export async function deleteTopic(id: string, dbUrl?: string, dbToken?: string): Promise<void> {
+  const db = getContentDb(dbUrl, dbToken);
+  await db.execute({ sql: 'DELETE FROM topic_queue WHERE id = ?', args: [id] });
+}
+
+export async function getApprovedTopics(limit = 3, dbUrl?: string, dbToken?: string): Promise<TopicQueueItem[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  const result = await db.execute({
+    sql: `SELECT * FROM topic_queue
+          WHERE status = 'approved' AND (retry_count < 3 OR retry_count IS NULL)
+          ORDER BY priority DESC, created_at ASC
+          LIMIT ?`,
+    args: [limit],
+  });
+  return result.rows as unknown as TopicQueueItem[];
 }
