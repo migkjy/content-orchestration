@@ -152,6 +152,12 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
   await db.execute(`ALTER TABLE campaigns ADD COLUMN start_date INTEGER`).catch(() => {});
   await db.execute(`ALTER TABLE campaigns ADD COLUMN end_date INTEGER`).catch(() => {});
 
+  // channels 테이블 — 구 스키마 호환: account_name 등 누락 컬럼 추가
+  await db.execute(`ALTER TABLE channels ADD COLUMN account_name TEXT`).catch(() => {});
+  await db.execute(`ALTER TABLE channels ADD COLUMN connection_type TEXT`).catch(() => {});
+  await db.execute(`ALTER TABLE channels ADD COLUMN connection_status TEXT DEFAULT 'disconnected'`).catch(() => {});
+  await db.execute(`ALTER TABLE channels ADD COLUMN connection_detail TEXT`).catch(() => {});
+
   // channels 테이블
   await db.execute(`
     CREATE TABLE IF NOT EXISTS channels (
@@ -160,7 +166,7 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
       platform TEXT NOT NULL,
       account_name TEXT,
       connection_type TEXT,
-      connection_status TEXT NOT NULL DEFAULT 'disconnected',
+      connection_status TEXT DEFAULT 'disconnected',
       connection_detail TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
