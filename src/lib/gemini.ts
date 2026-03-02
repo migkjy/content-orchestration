@@ -87,12 +87,13 @@ ${typeInstructions}`;
 
   const data = await res.json();
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  if (!content) throw new Error('Gemini returned empty content (possible safety filter)');
   const usage = data.usageMetadata ?? {};
   const tokensIn = Number(usage.promptTokenCount) || 0;
   const tokensOut = Number(usage.candidatesTokenCount) || 0;
 
-  // Gemini 2.0 Flash 가격: input $0.075/1M, output $0.30/1M (1USD=1350KRW 기준)
-  const costUsd = (tokensIn * 0.075 + tokensOut * 0.30) / 1_000_000;
+  // Gemini 2.0 Flash 가격: input $0.075/1M, output $0.15/1M (1USD=1350KRW 기준)
+  const costUsd = (tokensIn * 0.075 + tokensOut * 0.15) / 1_000_000;
   const cost_krw = Math.round(costUsd * 1350 * 10) / 10;
 
   return { content, tokens_input: tokensIn, tokens_output: tokensOut, cost_krw };
