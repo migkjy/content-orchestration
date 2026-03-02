@@ -174,6 +174,17 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
       updated_at INTEGER NOT NULL
     )
   `).catch(() => {});
+
+  // content_comments 테이블
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS content_comments (
+      id TEXT PRIMARY KEY,
+      content_id TEXT NOT NULL,
+      author TEXT NOT NULL DEFAULT '자비스',
+      body TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `).catch(() => {});
 }
 
 export async function getNewsletters(dbUrl?: string, dbToken?: string): Promise<Newsletter[]> {
@@ -883,4 +894,36 @@ export async function getCalendarContents(startTs: number, endTs: number, dbUrl?
     args: [startTs, endTs],
   });
   return result.rows;
+}
+
+// === CONTENT COMMENTS ===
+
+export interface ContentComment {
+  id: string;
+  content_id: string;
+  author: string;
+  body: string;
+  created_at: number;
+}
+
+export async function getComments(contentId: string, dbUrl?: string, dbToken?: string): Promise<ContentComment[]> {
+  const db = getContentDb(dbUrl, dbToken);
+  await db.execute(`CREATE TABLE IF NOT EXISTS content_comments (id TEXT PRIMARY KEY, content_id TEXT NOT NULL, author TEXT NOT NULL DEFAULT '자비스', body TEXT NOT NULL, created_at INTEGER NOT NULL)`).catch(() => {});
+  const result = await db.execute({
+    sql: 'SELECT * FROM content_comments WHERE content_id = ? ORDER BY created_at ASC',
+    args: [contentId],
+  });
+  return result.rows as unknown as ContentComment[];
+}
+
+export async function addComment(contentId: string, body: string, author: string = '자비스', dbUrl?: string, dbToken?: string): Promise<ContentComment> {
+  const db = getContentDb(dbUrl, dbToken);
+  await db.execute(`CREATE TABLE IF NOT EXISTS content_comments (id TEXT PRIMARY KEY, content_id TEXT NOT NULL, author TEXT NOT NULL DEFAULT '자비스', body TEXT NOT NULL, created_at INTEGER NOT NULL)`).catch(() => {});
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db.execute({
+    sql: 'INSERT INTO content_comments (id, content_id, author, body, created_at) VALUES (?, ?, ?, ?, ?)',
+    args: [id, contentId, author, body, now],
+  });
+  return { id, content_id: contentId, author, body, created_at: now };
 }
