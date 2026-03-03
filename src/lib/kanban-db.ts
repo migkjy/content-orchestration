@@ -1,5 +1,7 @@
 import { createClient } from '@libsql/client/web';
 
+// CEO 지시: 문서는 중앙 kanban DB에 저장 (cross-project 공유 문서 허브)
+// KANBAN_DB_URL ≠ CONTENT_OS_DB_URL (의도적 분리)
 function getKanbanDb() {
   return createClient({
     url: process.env.KANBAN_DB_URL!,
