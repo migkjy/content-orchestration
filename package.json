@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync-docs": "DOCS_ROOT=/Users/nbs22/(Claude)/(claude).projects/business-builder/docs node scripts/migrate-docs.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
