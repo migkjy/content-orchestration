@@ -39,6 +39,7 @@ export default async function HomePage() {
             <Link href="/channels" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">채널 관리</Link>
             <Link href="/calendar" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">캘린더</Link>
             <Link href="/api-docs" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">API Docs</Link>
+            <Link href="/documents" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">문서 허브</Link>
           </div>
         </div>
       </header>
@@ -49,12 +50,20 @@ export default async function HomePage() {
             <h1 className="text-2xl font-bold text-gray-900">프로젝트</h1>
             <p className="mt-1 text-sm text-gray-500">캠페인별 콘텐츠 오케스트레이션</p>
           </div>
-          <Link
-            href="/projects/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            + 새 프로젝트
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/documents"
+              className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+            >
+              📄 문서 허브
+            </Link>
+            <Link
+              href="/projects/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              + 새 프로젝트
+            </Link>
+          </div>
         </div>
 
         {campaignStats.length === 0 ? (
@@ -111,6 +120,9 @@ export default async function HomePage() {
             </Link>
             <Link href="/calendar" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors">
               캘린더
+            </Link>
+            <Link href="/documents" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-medium text-blue-600 hover:border-blue-400 hover:text-blue-700 transition-colors">
+              📄 문서 허브
             </Link>
           </div>
         </div>
