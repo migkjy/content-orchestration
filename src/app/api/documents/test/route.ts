@@ -6,7 +6,7 @@ export async function GET() {
   const token = process.env.KANBAN_DB_TOKEN;
 
   if (!url || !token) {
-    return NextResponse.json({ error: 'missing env vars', url: !!url, token: !!token });
+    return NextResponse.json({ error: 'missing env vars', hasUrl: !!url, hasToken: !!token, urlVal: url?.slice(0, 30) });
   }
 
   try {
@@ -14,6 +14,6 @@ export async function GET() {
     const result = await db.execute('SELECT COUNT(*) as cnt FROM documents');
     return NextResponse.json({ ok: true, count: result.rows[0][0] });
   } catch (err: unknown) {
-    return NextResponse.json({ error: String(err) });
+    return NextResponse.json({ error: String(err), urlVal: url?.slice(0, 40) });
   }
 }
