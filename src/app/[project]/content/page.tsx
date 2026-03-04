@@ -6,15 +6,22 @@ import { BulkActionBar } from '@/components/bulk-action-bar';
 
 export const revalidate = 0;
 
-const STATUS_TABS = ['all', 'draft', 'review', 'approved', 'scheduled', 'published'];
+const STATUS_TABS = [
+  'all', 'ideation', 'next_up', 'draft', 'in_progress',
+  'review', 'approved', 'scheduled', 'published', 'system',
+];
 
 const STATUS_LABELS: Record<string, string> = {
   all: '전체',
+  ideation: '아이디어',
+  next_up: '예정',
   draft: 'Draft',
+  in_progress: '작성중',
   review: '검수',
   approved: '승인',
   scheduled: '예약',
   published: '발행',
+  system: '시스템',
 };
 
 export default async function ContentWorkflowPage({
