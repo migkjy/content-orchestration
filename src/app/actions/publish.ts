@@ -79,6 +79,25 @@ export async function publishToBlog(contentId: string, projectId: string) {
   const content = await getContentById(contentId);
   if (!content) throw new Error('Content not found');
 
+  // ★ AI 실수 방지: 발행 전 검증
+  const validationErrors: string[] = [];
+
+  if (!content.title || content.title.trim().length < 5) {
+    validationErrors.push('제목이 너무 짧거나 없습니다 (5자 이상 필요)');
+  }
+
+  if (!content.content_body || content.content_body.length < 200) {
+    validationErrors.push(`본문이 너무 짧습니다 (현재 ${content.content_body?.length ?? 0}자, 최소 200자)`);
+  }
+
+  if (!['approved', 'scheduled'].includes(content.status)) {
+    validationErrors.push(`발행 불가 상태: "${content.status}". approved 또는 scheduled 상태만 발행 가능`);
+  }
+
+  if (validationErrors.length > 0) {
+    throw new Error(`발행 전 검증 실패:\n${validationErrors.join('\n')}`);
+  }
+
   const apiKey = process.env.APPPRO_BLOG_API_KEY;
   const apiUrl = process.env.APPPRO_BLOG_API_URL || 'https://apppro.kr/api/blog/publish';
   if (!apiKey) throw new Error('APPPRO_BLOG_API_KEY not configured');
