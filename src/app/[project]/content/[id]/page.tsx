@@ -135,6 +135,19 @@ export default async function ContentDetailPage({
         </div>
       </div>
 
+      {/* Workflow guide banner */}
+      <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 text-xs text-blue-600 flex flex-wrap items-center gap-1">
+        <span className="font-medium">워크플로우:</span>
+        {['ideation', 'next_up', 'draft', 'in_progress', 'review', 'approved', 'scheduled', 'published'].map((s, i, arr) => (
+          <span key={s} className="flex items-center gap-1">
+            <span className={`px-1.5 py-0.5 rounded text-xs ${
+              s === item.status ? 'bg-blue-600 text-white font-bold' : 'bg-blue-100 text-blue-700'
+            }`}>{s}</span>
+            {i < arr.length - 1 && <span className="text-blue-300">&rarr;</span>}
+          </span>
+        ))}
+      </div>
+
       {/* Title header block */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
