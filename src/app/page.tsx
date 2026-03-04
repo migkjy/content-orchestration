@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getCampaigns, getCampaignContentStats, ensureSchema } from '@/lib/content-db';
+import { getKoreaAiHubOkr } from '@/lib/kanban-db';
 
 export const revalidate = 60;
 
@@ -21,14 +22,17 @@ export default async function HomePage() {
   await ensureSchema().catch(() => {});
   const campaigns = await getCampaigns().catch(() => []);
 
-  const campaignStats = await Promise.all(
-    campaigns.map(async (c) => ({
-      campaign: c,
-      stats: await getCampaignContentStats(c.id).catch(() => ({
-        draft: 0, review: 0, approved: 0, scheduled: 0, published: 0, unwritten: 0, cancelled: 0, total: 0,
-      })),
-    }))
-  );
+  const [campaignStats, okrResults] = await Promise.all([
+    Promise.all(
+      campaigns.map(async (c) => ({
+        campaign: c,
+        stats: await getCampaignContentStats(c.id).catch(() => ({
+          draft: 0, review: 0, approved: 0, scheduled: 0, published: 0, unwritten: 0, cancelled: 0, total: 0,
+        })),
+      }))
+    ),
+    getKoreaAiHubOkr().catch(() => []),
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,6 +112,51 @@ export default async function HomePage() {
             >
               + 새 프로젝트 만들기
             </Link>
+          </div>
+        )}
+
+        {/* KoreaAI Hub OKR 보고서 */}
+        {okrResults.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-gray-700">KoreaAI Hub OKR</h2>
+              <a
+                href="https://koreaaihub.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:underline"
+              >
+                koreaaihub.kr
+              </a>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {okrResults.map((kr) => {
+                const pct = kr.target_value > 0 ? Math.round((kr.current_value / kr.target_value) * 100) : 0;
+                const colorClass = kr.status === 'green' || pct >= 70
+                  ? 'text-green-700 bg-green-50 border-green-200'
+                  : pct >= 40
+                    ? 'text-yellow-700 bg-yellow-50 border-yellow-200'
+                    : 'text-red-700 bg-red-50 border-red-200';
+                return (
+                  <div key={kr.id} className={`rounded-lg border p-3 ${colorClass}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold">{kr.id}</span>
+                      <span className="text-xs font-medium">{pct}%</span>
+                    </div>
+                    <p className="text-xs leading-snug mb-2 line-clamp-2">{kr.title}</p>
+                    <div className="w-full bg-white/50 rounded-full h-1.5">
+                      <div
+                        className="h-1.5 rounded-full bg-current opacity-60"
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs mt-1 opacity-75">
+                      {kr.current_value} / {kr.target_value} {kr.unit || ''}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

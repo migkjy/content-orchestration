@@ -123,3 +123,33 @@ export async function getCategories(): Promise<string[]> {
   );
   return result.rows.map((r) => r[0] as string);
 }
+
+export interface OkrKeyResult {
+  id: string;
+  title: string;
+  current_value: number;
+  target_value: number;
+  unit: string | null;
+  status: string | null;
+}
+
+export async function getKoreaAiHubOkr(): Promise<OkrKeyResult[]> {
+  try {
+    const result = await tursoExecute(
+      `SELECT id, title, current_value, target_value, unit, status
+       FROM okr_key_results
+       WHERE id LIKE 'KR2%'
+       ORDER BY id`
+    );
+    return result.rows.map((r) => ({
+      id: r[0] as string,
+      title: r[1] as string,
+      current_value: r[2] as number,
+      target_value: r[3] as number,
+      unit: r[4] as string | null,
+      status: r[5] as string | null,
+    }));
+  } catch {
+    return [];
+  }
+}
