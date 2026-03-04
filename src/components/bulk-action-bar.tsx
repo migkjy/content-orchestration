@@ -178,7 +178,7 @@ export function BulkActionBar({
                 </div>
 
                 {/* Title */}
-                <h3 className="text-base font-semibold text-gray-900 leading-snug mb-2">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug mb-2 break-words line-clamp-3 sm:line-clamp-2">
                   {item.title || item.topic || '(제목 없음)'}
                 </h3>
 
