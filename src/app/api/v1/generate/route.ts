@@ -1,5 +1,5 @@
 import { getTopicById, updateTopic, createContent, ensureSchema } from '@/lib/content-db';
-import { generateContent } from '@/lib/gemini';
+import { generateContent } from '@/lib/llm';
 import { requireAuth, apiOk, apiError } from '@/lib/api-utils';
 
 export const dynamic = 'force-dynamic';

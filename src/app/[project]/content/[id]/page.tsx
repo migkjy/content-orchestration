@@ -12,6 +12,7 @@ import {
 import { publishToBrevo, publishToBlog, publishToGetRates } from '@/app/actions/publish';
 import { ContentEditor } from '@/components/content-editor';
 import { SchedulerForm } from '@/components/scheduler-form';
+import { ConfirmForm } from '@/components/confirm-form';
 
 export const revalidate = 0;
 
@@ -98,18 +99,24 @@ export default async function ContentDetailPage({
             </form>
           )}
           {item.status === 'approved' && (
-            <form action={publishToBrevo.bind(null, item.id, project)}>
+            <ConfirmForm
+              action={publishToBrevo.bind(null, item.id, project)}
+              message={`"${item.title || '제목 없음'}"을 Brevo로 이메일 발송하시겠습니까?\n\n이 작업은 즉시 구독자에게 전송됩니다.`}
+            >
               <button type="submit" className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 border border-green-700 rounded hover:bg-green-700 transition-colors">
                 Brevo 발송
               </button>
-            </form>
+            </ConfirmForm>
           )}
           {item.status === 'approved' && item.type === 'blog' && (
-            <form action={publishToBlog.bind(null, item.id, project)}>
+            <ConfirmForm
+              action={publishToBlog.bind(null, item.id, project)}
+              message={`"${item.title || '제목 없음'}"을 블로그에 발행하시겠습니까?\n\n이 작업은 즉시 apppro.kr에 게시됩니다.`}
+            >
               <button type="submit" className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 border border-blue-700 rounded hover:bg-blue-700 transition-colors">
                 블로그 게시
               </button>
-            </form>
+            </ConfirmForm>
           )}
           {item.status === 'approved' && item.channel === 'getrates' && (
             <form action={publishToGetRates.bind(null, item.id, project)}>
@@ -126,6 +133,19 @@ export default async function ContentDetailPage({
             />
           )}
         </div>
+      </div>
+
+      {/* Workflow guide banner */}
+      <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 text-xs text-blue-600 flex flex-wrap items-center gap-1">
+        <span className="font-medium">워크플로우:</span>
+        {['ideation', 'next_up', 'draft', 'in_progress', 'review', 'approved', 'scheduled', 'published'].map((s, i, arr) => (
+          <span key={s} className="flex items-center gap-1">
+            <span className={`px-1.5 py-0.5 rounded text-xs ${
+              s === item.status ? 'bg-blue-600 text-white font-bold' : 'bg-blue-100 text-blue-700'
+            }`}>{s}</span>
+            {i < arr.length - 1 && <span className="text-blue-300">&rarr;</span>}
+          </span>
+        ))}
       </div>
 
       {/* Title header block */}

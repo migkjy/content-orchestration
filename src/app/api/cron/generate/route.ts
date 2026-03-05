@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApprovedTopics, updateTopic, createContent, ensureSchema, resetStuckGeneratingTopics } from '@/lib/content-db';
-import { generateContent } from '@/lib/gemini';
+import { generateContent } from '@/lib/llm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
