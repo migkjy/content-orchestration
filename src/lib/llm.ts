@@ -51,8 +51,8 @@ export async function generateContent(params: {
   description?: string;
   prompt_hint?: string;
 }): Promise<LLMResult> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 
   const pillarCtx = PILLAR_CONTEXT[params.pillar] || PILLAR_CONTEXT.general;
   const typeInstructions = CONTENT_TYPE_INSTRUCTIONS[params.content_type] || CONTENT_TYPE_INSTRUCTIONS.blog;
@@ -66,7 +66,7 @@ ${params.prompt_hint ? `추가 지시: ${params.prompt_hint}` : ''}
 ${typeInstructions}`;
 
   const payload = {
-    model: 'gpt-4o-mini',
+    model: 'openai/gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -75,29 +75,31 @@ ${typeInstructions}`;
     max_tokens: 1500,
   };
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://content-orchestration.vercel.app',
+      'X-Title': 'Content Orchestration',
     },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
     const errBody = await res.text();
-    throw new Error(`OpenAI API error ${res.status}: ${errBody}`);
+    throw new Error(`OpenRouter API error ${res.status}: ${errBody}`);
   }
 
   const data = await res.json();
   const content = data.choices?.[0]?.message?.content ?? '';
-  if (!content) throw new Error('OpenAI returned empty content (possible content filter)');
+  if (!content) throw new Error('OpenRouter returned empty content (possible content filter)');
 
   const usage = data.usage ?? {};
   const tokensIn = Number(usage.prompt_tokens) || 0;
   const tokensOut = Number(usage.completion_tokens) || 0;
 
-  // gpt-4o-mini 가격: input $0.15/1M, output $0.60/1M (1USD=1350KRW 기준)
+  // OpenRouter gpt-4o-mini 가격: input $0.15/1M, output $0.60/1M (1USD=1350KRW 기준)
   const costUsd = (tokensIn * 0.15 + tokensOut * 0.60) / 1_000_000;
   const cost_krw = Math.round(costUsd * 1350 * 10) / 10;
 
