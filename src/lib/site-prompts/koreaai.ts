@@ -1,4 +1,4 @@
-// KoreaAI Hub (koreaaihub.kr) - AI tool directory & hub platform
+// KoreaAI Hub (aihubkorea.kr) - AI tool directory & hub platform
 import type { TargetSite } from '../schedule';
 
 export const SITE_ID: TargetSite = 'koreaai';

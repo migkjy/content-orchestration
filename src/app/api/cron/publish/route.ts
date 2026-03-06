@@ -143,7 +143,7 @@ async function publishApppro(
   }
 }
 
-// --- koreaaihub.kr (GitHub MD file) ---
+// --- aihubkorea.kr (GitHub MD file) ---
 async function publishKoreaai(
   contentId: string,
   title: string | null,
@@ -157,7 +157,7 @@ async function publishKoreaai(
 
   const logId = await createPublishLog({
     content_id: contentId,
-    platform_id: 'koreaaihub.kr',
+    platform_id: 'aihubkorea.kr',
     status: 'pending',
     triggered_by: 'cron',
   });
@@ -217,7 +217,7 @@ async function publishKoreaai(
         status: 'success',
         response_status: res.status,
         response_body: JSON.stringify({ sha: body.content?.sha }),
-        published_url: `https://koreaaihub.kr/blog/${slug}`,
+        published_url: `https://aihubkorea.kr/blog/${slug}`,
       });
       await updateContentStatus(contentId, 'published', {});
     } else {

@@ -121,12 +121,12 @@ export default async function HomePage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-gray-700">KoreaAI Hub OKR</h2>
               <a
-                href="https://koreaaihub.kr"
+                href="https://aihubkorea.kr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-blue-600 hover:underline"
               >
-                koreaaihub.kr
+                aihubkorea.kr
               </a>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
