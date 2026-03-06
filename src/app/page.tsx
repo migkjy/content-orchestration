@@ -42,6 +42,7 @@ export default async function HomePage() {
           <div className="flex items-center gap-3">
             <Link href="/channels" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">채널 관리</Link>
             <Link href="/calendar" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">캘린더</Link>
+            <Link href="/emails" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">이메일 시퀀스</Link>
             <Link href="/api-docs" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">API Docs</Link>
             <Link href="/documents" className="text-xs text-gray-500 hover:text-blue-600 transition-colors">문서 허브</Link>
           </div>
