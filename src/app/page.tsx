@@ -115,11 +115,11 @@ export default async function HomePage() {
           </div>
         )}
 
-        {/* KoreaAI Hub OKR 보고서 */}
+        {/* AIHub Korea OKR 보고서 */}
         {okrResults.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-gray-700">KoreaAI Hub OKR</h2>
+              <h2 className="text-sm font-bold text-gray-700">AIHub Korea OKR</h2>
               <a
                 href="https://aihubkorea.kr"
                 target="_blank"

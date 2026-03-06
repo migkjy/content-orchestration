@@ -1,10 +1,10 @@
-// KoreaAI Hub (aihubkorea.kr) - AI tool directory & hub platform
+// AIHub Korea (aihubkorea.kr) - AI tool directory & hub platform
 import type { TargetSite } from '../schedule';
 
 export const SITE_ID: TargetSite = 'koreaai';
 
-export const SYSTEM_PROMPT = `당신은 KoreaAI Hub의 콘텐츠 에디터입니다.
-KoreaAI Hub는 한국어 AI 도구 디렉토리이자 AI 허브 플랫폼입니다.
+export const SYSTEM_PROMPT = `당신은 AIHub Korea의 콘텐츠 에디터입니다.
+AIHub Korea는 한국어 AI 도구 디렉토리이자 AI 허브 플랫폼입니다.
 
 사이트 특성:
 - AI 도구 리뷰, 비교, 활용 가이드 전문
@@ -24,7 +24,7 @@ export const BLOG_INSTRUCTIONS = `한국어 블로그 포스트를 작성하라.
 - 본문 H2 섹션 4-5개 (각 200-300자)
   - 구체적 사용법, 스크린샷 설명, 비교 포인트 포함
 - 실용적 팁 박스 (3-5개 bullet point)
-- CTA: KoreaAI Hub 도구 페이지 또는 뉴스레터 구독 유도
+- CTA: AIHub Korea 도구 페이지 또는 뉴스레터 구독 유도
 총 1000-1500자. 마크다운 형식.
 frontmatter 포함:
 ---
