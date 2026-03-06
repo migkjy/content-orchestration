@@ -4,7 +4,8 @@
       "main": false,
       "master": false,
       "production": true,
-      "staging": true
+      "staging": true,
+      "preview": false
     }
   },
   "crons": [
