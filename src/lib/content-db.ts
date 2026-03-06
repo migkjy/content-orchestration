@@ -39,6 +39,7 @@ export interface ContentQueueItem {
   platform_targets: string | null;
   publish_results: string | null;
   metadata: string | null;
+  target_site: string | null;       // koreaai | apppro | richbukae
   campaign_id: string | null;
   channel_id: string | null;
 }
@@ -132,6 +133,7 @@ export interface TopicQueueItem {
   tags: string | null;               // JSON array string e.g. '["AI","자동화"]'
   prompt_hint: string | null;        // LLM에 전달할 추가 지시사항
   generated_content_id: string | null; // 생성 완료 시 content_queue.id FK
+  target_site: string | null;        // koreaai | apppro | richbukae
   retry_count: number;
   error_message: string | null;
   created_at: number;
@@ -153,6 +155,9 @@ export async function ensureSchema(dbUrl?: string, dbToken?: string): Promise<vo
   // 신규: campaign_id, channel_id
   await db.execute(`ALTER TABLE content_queue ADD COLUMN campaign_id TEXT`).catch(() => {});
   await db.execute(`ALTER TABLE content_queue ADD COLUMN channel_id TEXT`).catch(() => {});
+  // Blog pipeline: target_site for multi-site routing
+  await db.execute(`ALTER TABLE content_queue ADD COLUMN target_site TEXT DEFAULT 'apppro'`).catch(() => {});
+  await db.execute(`ALTER TABLE topic_queue ADD COLUMN target_site TEXT DEFAULT 'apppro'`).catch(() => {});
 
   // campaigns 테이블
   await db.execute(`
@@ -650,13 +655,15 @@ export async function createContent(data: {
   channel?: string;
   project?: string;
   priority?: number;
+  target_site?: string;
+  metadata?: string;
 }, dbUrl?: string, dbToken?: string): Promise<string> {
   const db = getContentDb(dbUrl, dbToken);
   const id = crypto.randomUUID();
   const now = Date.now();
   await db.execute({
-    sql: `INSERT INTO content_queue (id, type, pillar, topic, title, content_body, status, priority, channel, project, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO content_queue (id, type, pillar, topic, title, content_body, status, priority, channel, project, target_site, metadata, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       data.type,
@@ -667,6 +674,8 @@ export async function createContent(data: {
       data.priority ?? 0,
       data.channel || null,
       data.project || null,
+      data.target_site || 'apppro',
+      data.metadata || null,
       now,
       now,
     ],
@@ -1005,6 +1014,7 @@ export async function createTopic(data: {
   source?: string;
   tags?: string;
   prompt_hint?: string;
+  target_site?: string;
 }, dbUrl?: string, dbToken?: string): Promise<string> {
   const db = getContentDb(dbUrl, dbToken);
   const id = crypto.randomUUID();
@@ -1012,11 +1022,11 @@ export async function createTopic(data: {
   await db.execute({
     sql: `INSERT INTO topic_queue
           (id, pillar, title, description, content_type, status, priority, source, tags, prompt_hint,
-           retry_count, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, 0, ?, ?)`,
+           target_site, retry_count, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, 0, ?, ?)`,
     args: [id, data.pillar, data.title, data.description ?? null, data.content_type,
            data.priority ?? 0, data.source ?? 'manual', data.tags ?? null,
-           data.prompt_hint ?? null, now, now],
+           data.prompt_hint ?? null, data.target_site ?? 'apppro', now, now],
   });
   return id;
 }
@@ -1070,14 +1080,17 @@ export async function resetStuckGeneratingTopics(maxAgeMs = 5 * 60 * 1000, dbUrl
   return Number(result.rowsAffected) || 0;
 }
 
-export async function getApprovedTopics(limit = 3, dbUrl?: string, dbToken?: string): Promise<TopicQueueItem[]> {
+export async function getApprovedTopics(limit = 3, targetSite?: string, dbUrl?: string, dbToken?: string): Promise<TopicQueueItem[]> {
   const db = getContentDb(dbUrl, dbToken);
+  const siteFilter = targetSite ? `AND (target_site = ? OR target_site IS NULL)` : '';
+  const args: (string | number)[] = targetSite ? [targetSite, limit] : [limit];
   const result = await db.execute({
     sql: `SELECT * FROM topic_queue
           WHERE status = 'approved' AND (retry_count < 3 OR retry_count IS NULL)
+          ${siteFilter}
           ORDER BY priority DESC, created_at ASC
           LIMIT ?`,
-    args: [limit],
+    args,
   });
   return result.rows as unknown as TopicQueueItem[];
 }

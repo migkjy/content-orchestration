@@ -50,14 +50,16 @@ export async function generateContent(params: {
   content_type: string;
   description?: string;
   prompt_hint?: string;
+  systemPromptOverride?: string;
+  instructionsOverride?: string;
 }): Promise<LLMResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 
   const pillarCtx = PILLAR_CONTEXT[params.pillar] || PILLAR_CONTEXT.general;
-  const typeInstructions = CONTENT_TYPE_INSTRUCTIONS[params.content_type] || CONTENT_TYPE_INSTRUCTIONS.blog;
+  const typeInstructions = params.instructionsOverride || CONTENT_TYPE_INSTRUCTIONS[params.content_type] || CONTENT_TYPE_INSTRUCTIONS.blog;
 
-  const systemPrompt = `당신은 AppPro 콘텐츠 마케터다. 서비스 컨텍스트: ${pillarCtx}`;
+  const systemPrompt = params.systemPromptOverride || `당신은 AppPro 콘텐츠 마케터다. 서비스 컨텍스트: ${pillarCtx}`;
 
   const userPrompt = `주제: "${params.title}"
 ${params.description ? `설명: ${params.description}` : ''}
