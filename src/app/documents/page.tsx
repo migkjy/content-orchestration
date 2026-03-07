@@ -25,21 +25,18 @@ export default async function DocumentsPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
+      {/* 필터 헤더 */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <Link href="/" className="text-sm text-blue-600 hover:underline mb-1 block">
-                ← 대시보드
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">문서 허브</h1>
-              <p className="text-sm text-gray-500 mt-1">플랜·보고서·전략 문서 전체 {documents.length}건</p>
+              <h1 className="text-xl font-bold text-gray-900">문서 허브</h1>
+              <p className="text-sm text-gray-500 mt-0.5">플랜·보고서·전략 문서 전체 {documents.length}건</p>
             </div>
           </div>
 
           {/* 카테고리 필터 */}
-          <div className="flex gap-2 mt-4 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             <Link
               href="/documents"
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${

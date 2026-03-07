@@ -24,17 +24,6 @@ export default function EmailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm text-gray-500 hover:text-blue-600">
-              &larr; 대시보드
-            </Link>
-            <span className="text-sm font-bold text-gray-800">Welcome 이메일 시퀀스</span>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-7xl px-4 py-8 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome 이메일 시퀀스</h1>

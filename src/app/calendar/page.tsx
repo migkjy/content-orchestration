@@ -59,19 +59,17 @@ export default async function CalendarPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      {/* 월 네비게이션 서브 헤더 */}
+      <div className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">← 홈</Link>
-            <span className="text-sm font-bold text-gray-800">캘린더</span>
-          </div>
+          <h1 className="text-base font-bold text-gray-800">캘린더</h1>
           <div className="flex items-center gap-2">
             <Link href={`/calendar?year=${prevMonth.year}&month=${prevMonth.month}`} className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50">◀</Link>
             <span className="text-sm font-bold text-gray-800">{year}년 {MONTH_NAMES[month]}</span>
             <Link href={`/calendar?year=${nextMonth.year}&month=${nextMonth.month}`} className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50">▶</Link>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
