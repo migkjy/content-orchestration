@@ -115,6 +115,28 @@ export default async function HomePage() {
           </div>
         </div>
 
+        {/* Quick Navigation */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h2 className="text-base font-bold text-gray-900 mb-4">빠른 탐색</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/apppro" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-sm">
+              ◈ 대시보드
+            </Link>
+            <Link href="/apppro/calendar" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-sm">
+              ◷ 배포 캘린더
+            </Link>
+            <Link href="/apppro/rss" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-sm">
+              ◉ RSS 수집
+            </Link>
+            <Link href="/apppro/logs" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-sm">
+              ≡ 파이프라인 로그
+            </Link>
+            <Link href="/youtube" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-red-200 rounded-lg text-sm font-medium text-red-700 hover:border-red-400 hover:text-red-600 transition-colors shadow-sm">
+              ▶ YouTube 관리
+            </Link>
+          </div>
+        </div>
+
         {/* 프로젝트 (캠페인) 목록 */}
         <div>
           <div className="flex items-center justify-between mb-3">

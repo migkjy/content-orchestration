@@ -15,6 +15,10 @@ const NAV_ITEMS = [
   { href: '/calendar', label: '캘린더', icon: '◷' },
 ];
 
+const GLOBAL_NAV = [
+  { href: '/youtube', label: 'YouTube', icon: '▶' },
+];
+
 export default async function ProjectLayout({
   children,
   params,
@@ -44,6 +48,17 @@ export default async function ProjectLayout({
                 key={item.href}
                 href={`/${project}${item.href}`}
                 className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap"
+              >
+                <span className="mr-1">{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
+            <span className="text-gray-200 mx-1">|</span>
+            {GLOBAL_NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="px-2.5 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
               >
                 <span className="mr-1">{item.icon}</span>
                 {item.label}
