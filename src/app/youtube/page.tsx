@@ -115,12 +115,20 @@ export default async function YouTubeListPage({
             <span className="text-gray-300">|</span>
             <span className="text-sm font-bold text-gray-800">YouTube 관리</span>
           </div>
-          <Link
-            href="/youtube/new"
-            className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            + 새 영상 등록
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/youtube/calendar"
+              className="px-4 py-1.5 text-sm bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              캘린더 보기
+            </Link>
+            <Link
+              href="/youtube/new"
+              className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              + 새 영상 등록
+            </Link>
+          </div>
         </div>
       </header>
 
