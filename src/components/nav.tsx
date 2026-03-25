@@ -10,6 +10,8 @@ const NAV_ITEMS = [
   { href: '/documents', label: '문서 허브', icon: '📄' },
   { href: '/calendar', label: '캘린더', icon: '📅' },
   { href: '/channels', label: '채널 관리', icon: '📡' },
+  { href: '/youtube', label: 'YouTube', icon: '🎬' },
+  { href: '/sns', label: 'SNS', icon: '📱' },
   { href: '/api-docs', label: 'API', icon: '🔗' },
 ];
 
