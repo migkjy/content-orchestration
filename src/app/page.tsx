@@ -134,6 +134,9 @@ export default async function HomePage() {
             <Link href="/youtube" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-red-200 rounded-lg text-sm font-medium text-red-700 hover:border-red-400 hover:text-red-600 transition-colors shadow-sm">
               ▶ YouTube 관리
             </Link>
+            <Link href="/newsletter" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-teal-200 rounded-lg text-sm font-medium text-teal-700 hover:border-teal-400 hover:text-teal-600 transition-colors shadow-sm">
+              📰 뉴스레터
+            </Link>
           </div>
         </div>
 
