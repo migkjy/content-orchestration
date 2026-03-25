@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 const NAV_ITEMS = [
   { href: '/', label: '대시보드', icon: '🏠' },
+  { href: '/newsletter', label: '뉴스레터', icon: '📰' },
   { href: '/emails', label: '이메일', icon: '📧' },
   { href: '/documents', label: '문서 허브', icon: '📄' },
   { href: '/calendar', label: '캘린더', icon: '📅' },
