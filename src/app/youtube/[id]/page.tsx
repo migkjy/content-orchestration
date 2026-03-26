@@ -1,13 +1,11 @@
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import {
   getYoutubeVideoById,
-  updateYoutubeVideo,
-  deleteYoutubeVideo,
   ensureYoutubeSchema,
   YOUTUBE_STATUSES,
-  type YoutubeVideoStatus,
 } from '@/lib/youtube-db';
+import { advanceVideoStatus, revertVideoStatus, updateVideoDetails, removeVideo } from './actions';
 
 export const revalidate = 0;
 
@@ -53,74 +51,26 @@ export default async function YouTubeDetailPage({
   if (!video) notFound();
 
   const currentIdx = YOUTUBE_STATUSES.indexOf(video.status);
-  const nextStatus: YoutubeVideoStatus | null =
+  const nextStatus =
     currentIdx >= 0 && currentIdx < YOUTUBE_STATUSES.length - 1
       ? YOUTUBE_STATUSES[currentIdx + 1]
       : null;
-  const prevStatus: YoutubeVideoStatus | null =
+  const prevStatus =
     currentIdx > 0 ? YOUTUBE_STATUSES[currentIdx - 1] : null;
 
   const tags = parseTags(video.tags);
 
-  async function advanceStatus() {
-    'use server';
-    if (!nextStatus) return;
-    const publishedAt = nextStatus === 'published' ? Date.now() : undefined;
-    await updateYoutubeVideo(id, { status: nextStatus, published_at: publishedAt });
-    redirect(`/youtube/${id}`);
-  }
-
-  async function revertStatus() {
-    'use server';
-    if (!prevStatus) return;
-    await updateYoutubeVideo(id, { status: prevStatus });
-    redirect(`/youtube/${id}`);
-  }
-
-  async function updateVideo(formData: FormData) {
-    'use server';
-
-    const title = formData.get('title') as string;
-    if (!title || !title.trim()) {
-      throw new Error('제목은 필수입니다.');
-    }
-
-    const tagsRaw = (formData.get('tags') as string)?.trim();
-    let tagsJson: string | undefined;
-    if (tagsRaw) {
-      const tagArray = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
-      tagsJson = JSON.stringify(tagArray);
-    } else {
-      tagsJson = '[]';
-    }
-
-    await updateYoutubeVideo(id, {
-      title: title.trim(),
-      topic: (formData.get('topic') as string)?.trim() || undefined,
-      target_keyword: (formData.get('target_keyword') as string)?.trim() || undefined,
-      script_outline: (formData.get('script_outline') as string)?.trim() || undefined,
-      description: (formData.get('description') as string)?.trim() || undefined,
-      tags: tagsJson,
-      thumbnail_text: (formData.get('thumbnail_text') as string)?.trim() || undefined,
-      scheduled_date: (formData.get('scheduled_date') as string)?.trim() || undefined,
-      youtube_url: (formData.get('youtube_url') as string)?.trim() || undefined,
-    });
-
-    redirect(`/youtube/${id}`);
-  }
-
-  async function removeVideo() {
-    'use server';
-    await deleteYoutubeVideo(id);
-    redirect('/youtube');
-  }
+  const advanceAction = advanceVideoStatus.bind(null, id, nextStatus);
+  const revertAction = revertVideoStatus.bind(null, id, prevStatus);
+  const updateAction = updateVideoDetails.bind(null, id);
+  const removeAction = removeVideo.bind(null, id);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="mx-auto max-w-4xl px-4 py-3 flex items-center gap-3">
           <Link href="/youtube" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
-            ← YouTube 목록
+            &larr; YouTube 목록
           </Link>
           <span className="text-gray-300">|</span>
           <span className="text-sm font-medium text-gray-600">영상 상세</span>
@@ -173,7 +123,7 @@ export default async function YouTubeDetailPage({
                     {s}
                   </span>
                   {i < YOUTUBE_STATUSES.length - 1 && (
-                    <span className={`text-xs ${done ? 'text-gray-400' : 'text-gray-200'}`}>→</span>
+                    <span className={`text-xs ${done ? 'text-gray-400' : 'text-gray-200'}`}>&rarr;</span>
                   )}
                 </div>
               );
@@ -181,22 +131,22 @@ export default async function YouTubeDetailPage({
           </div>
           <div className="flex items-center gap-2 mt-3">
             {prevStatus && (
-              <form action={revertStatus}>
+              <form action={revertAction}>
                 <button
                   type="submit"
                   className="px-4 py-1.5 text-sm bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  ← {prevStatus}(으)로 되돌리기
+                  &larr; {prevStatus}(으)로 되돌리기
                 </button>
               </form>
             )}
             {nextStatus && (
-              <form action={advanceStatus}>
+              <form action={advanceAction}>
                 <button
                   type="submit"
                   className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  {nextStatus}(으)로 이동 →
+                  {nextStatus}(으)로 이동 &rarr;
                 </button>
               </form>
             )}
@@ -240,7 +190,7 @@ export default async function YouTubeDetailPage({
         </div>
 
         {/* Edit Form */}
-        <form action={updateVideo} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
+        <form action={updateAction} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
           <p className="text-xs font-semibold text-gray-400 uppercase">영상 정보 편집</p>
 
           <div>
@@ -352,7 +302,7 @@ export default async function YouTubeDetailPage({
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-            <form action={removeVideo}>
+            <form action={removeAction}>
               <button
                 type="submit"
                 className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"

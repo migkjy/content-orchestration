@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -80,7 +80,7 @@ export default function ContentDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  async function loadData() {
     setLoading(true);
     try {
       const [cRes, cmRes] = await Promise.all([
@@ -105,9 +105,12 @@ export default function ContentDetailPage() {
       setError('로딩 중 오류가 발생했습니다.');
     }
     setLoading(false);
-  }, [contentId]);
+  }
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentId]);
 
   async function handleSave() {
     if (!item) return;

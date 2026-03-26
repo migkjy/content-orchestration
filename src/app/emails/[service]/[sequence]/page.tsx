@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface EmailData {
   service: string;
@@ -16,7 +16,6 @@ interface EmailData {
 
 export default function EmailDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const service = params.service as string;
   const sequence = params.sequence as string;
 
@@ -30,7 +29,7 @@ export default function EmailDetailPage() {
   const [dirty, setDirty] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
-  const fetchEmail = useCallback(async () => {
+  async function fetchEmail() {
     setLoading(true);
     const res = await fetch(`/api/emails/${service}/${sequence}`);
     if (res.ok) {
@@ -41,11 +40,12 @@ export default function EmailDetailPage() {
       setDirty(false);
     }
     setLoading(false);
-  }, [service, sequence]);
+  }
 
   useEffect(() => {
     fetchEmail();
-  }, [fetchEmail]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service, sequence]);
 
   async function handleSave() {
     setSaving(true);

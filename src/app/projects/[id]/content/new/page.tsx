@@ -39,17 +39,18 @@ export default function NewContentPage() {
       .then(d => setChannels(d.data ?? []));
   }, []);
 
-  // Set type from selected channel platform
-  useEffect(() => {
+  // Derive type from selected channel platform (no setState needed)
+  const derivedType = (() => {
     const ch = channels.find(c => c.id === form.channel_id);
     if (ch) {
       const platformTypeMap: Record<string, string> = {
         instagram: 'instagram', youtube: 'youtube',
         newsletter: 'newsletter', blog: 'blog', facebook: 'facebook', x: 'x',
       };
-      setForm(f => ({ ...f, type: platformTypeMap[ch.platform] ?? 'blog' }));
+      return platformTypeMap[ch.platform] ?? 'blog';
     }
-  }, [form.channel_id, channels]);
+    return form.type;
+  })();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,7 +81,7 @@ export default function NewContentPage() {
           body: JSON.stringify({
             title: form.title,
             content_body: form.content_body || null,
-            type: form.type,
+            type: derivedType,
             channel_id: form.channel_id || null,
             campaign_id: campaignId,
             status: form.content_body ? 'draft' : 'unwritten',

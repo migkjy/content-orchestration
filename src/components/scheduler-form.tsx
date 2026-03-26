@@ -3,6 +3,13 @@
 import { useState } from 'react';
 import { scheduleContent } from '@/app/actions/content';
 
+function computeMinDatetime(): string {
+  const d = new Date(Date.now() + 10 * 60 * 1000);
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kst = new Date(d.getTime() + kstOffset);
+  return kst.toISOString().slice(0, 16);
+}
+
 export function SchedulerForm({
   contentId,
   projectId,
@@ -41,13 +48,8 @@ export function SchedulerForm({
     setOpen(false);
   };
 
-  // 최소값: 지금으로부터 10분 후
-  const minDatetime = () => {
-    const d = new Date(Date.now() + 10 * 60 * 1000);
-    const offset = 9 * 60 * 60 * 1000;
-    const kst = new Date(d.getTime() + offset);
-    return kst.toISOString().slice(0, 16);
-  };
+  // 최소값: 지금으로부터 10분 후 (initialized via useState initializer to avoid impure render)
+  const [minDatetime] = useState(computeMinDatetime);
 
   if (!open) {
     return (
@@ -71,7 +73,7 @@ export function SchedulerForm({
       <input
         type="datetime-local"
         value={datetime}
-        min={minDatetime()}
+        min={minDatetime}
         onChange={(e) => setDatetime(e.target.value)}
         required
         className="px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 text-gray-900"
