@@ -129,18 +129,25 @@ export function DonutChart({
   const strokeWidth = radius * 0.35;
   const circumference = 2 * Math.PI * radius;
 
-  let offset = 0;
+  // Pre-compute offsets to avoid mutating variables during render
+  const segments = data.reduce<{ dashLen: number; dashGap: number; offset: number }[]>(
+    (acc, d) => {
+      const pct = d.value / total;
+      const dashLen = pct * circumference;
+      const dashGap = circumference - dashLen;
+      const prevOffset = acc.length > 0 ? acc[acc.length - 1].offset + acc[acc.length - 1].dashLen : 0;
+      acc.push({ dashLen, dashGap, offset: prevOffset });
+      return acc;
+    },
+    [],
+  );
 
   return (
     <div className="flex items-center gap-6">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           {data.map((d, i) => {
-            const pct = d.value / total;
-            const dashLen = pct * circumference;
-            const dashGap = circumference - dashLen;
-            const currentOffset = offset;
-            offset += dashLen;
+            const { dashLen, dashGap, offset: currentOffset } = segments[i];
 
             return (
               <circle
