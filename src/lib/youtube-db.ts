@@ -152,6 +152,12 @@ export async function updateYoutubeVideo(id: string, data: {
 }, dbUrl?: string, dbToken?: string): Promise<void> {
   const db = getContentDb(dbUrl, dbToken);
   const now = Date.now();
+
+  // Auto-set published_at when status transitions to 'published' and no explicit value provided
+  if (data.status === 'published' && data.published_at === undefined) {
+    data.published_at = now;
+  }
+
   const sets: string[] = ['updated_at = ?'];
   const args: (string | number | null)[] = [now];
 
